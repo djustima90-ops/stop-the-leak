@@ -489,18 +489,22 @@
 
     /* ==================== SPOTLIGHT HOVER ==================== */
     .spotlight-group > * {
-      transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
     .spotlight-group.has-hover > * {
-      opacity: 0.5;
-      filter: saturate(0.4);
+      opacity: 0.45;
+      filter: brightness(0.7);
     }
     .spotlight-group.has-hover > .spotlight-active {
       opacity: 1;
-      filter: saturate(1);
-      transform: translateY(-3px);
-      box-shadow: 0 0 20px rgba(220, 38, 38, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.08);
-      border-color: rgba(220, 38, 38, 0.4);
+      filter: brightness(1);
+      transform: translateY(-4px);
+      box-shadow: 0 0 30px rgba(220, 38, 38, 0.2), 0 0 60px rgba(220, 38, 38, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .spotlight-group.has-hover > .spotlight-active h2,
+    .spotlight-group.has-hover > .spotlight-active h3 {
+      filter: brightness(1.15);
     }
   </style>
 </head>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leak Report — www.bynder.com</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: #1e293b;
+      border-bottom: 3px solid #dc2626;
+      padding: 2rem 2rem 1.6rem;
+    }
+    .header h1 { font-size: 1.8rem; font-weight: 800; }
+    .header h1 span { color: #f87171; }
+    .meta { color: #94a3b8; font-size: 0.9rem; margin-top: 0.4rem; }
+    .meta a { color: #60a5fa; text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+
+    /* Layout */
+    .content { max-width: 860px; margin: 0 auto; padding: 2rem; }
+
+    /* Executive Summary */
+    .summary-card {
+      background: #1e293b;
+      border-left: 4px solid #dc2626;
+      border-radius: 8px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .summary-card h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.6rem; }
+    .summary-card p { font-size: 1.05rem; color: #cbd5e1; }
+
+    /* Leak Count Bar */
+    .leak-counts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2.2rem;
+    }
+    .count-box {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .count-box .number { font-size: 2rem; font-weight: 800; color: #f87171; }
+    .count-box .label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; margin-top: 0.2rem; }
+    .count-box.total { border: 2px solid #dc2626; }
+    .count-box.total .number { color: #dc2626; }
+
+    /* Section */
+    .section { margin-bottom: 2.2rem; }
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #334155;
+      margin-bottom: 1rem;
+    }
+
+    /* Finding Card */
+    .finding {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 0.8rem;
+    }
+    .finding-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .finding-text { font-weight: 600; font-size: 1rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-high { background: #991b1b; color: #fca5a5; }
+    .badge-medium { background: #854d0e; color: #fde68a; }
+    .badge-low { background: #166534; color: #86efac; }
+    .finding-row { font-size: 0.9rem; color: #94a3b8; margin-top: 0.3rem; }
+    .finding-row strong { color: #cbd5e1; }
+
+    /* Priority Fixes */
+    .priorities {
+      background: #1e293b;
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 2rem;
+    }
+    .priorities h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #fbbf24; margin-bottom: 0.8rem; }
+    .priorities ol { padding-left: 1.2rem; }
+    .priorities li { margin-bottom: 0.5rem; font-size: 1rem; color: #cbd5e1; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      color: #475569;
+      border-top: 1px solid #1e293b;
+    }
+    .footer a { color: #64748b; text-decoration: none; }
+
+    /* Back link */
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: #60a5fa;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Stop the <span>Leak</span> — Audit Report</h1>
+    <p class="meta">
+      www.bynder.com &middot;
+      <a href="https://www.bynder.com/en/?hstk_creative=797372664212&amp;hstk_campaign=15420174945&amp;hstk_network=googleAds&amp;utm_campaign=gg_nam_dg_search_brand_en&amp;utm_source=google&amp;utm_medium=cpc&amp;utm_term=bynder&amp;_bm=e&amp;_bn=g&amp;gad_source=1&amp;gad_campaignid=15420174945&amp;gbraid=0AAAAADxEUHyXchOluwF67gLSo832j0FHZ&amp;gclid=Cj0KCQjwm6POBhCrARIsAIG58CJ-wckgHgtfx-bU2KRGe-9XZGk4oikShP6VpbJZJJmEB_WtmMhMPdIaAjKOEALw_wcB" target="_blank" rel="noopener">https://www.bynder.com/en/?hstk_creative=797372664212&amp;hstk_campaign=15420174945&amp;hstk_network=googleAds&amp;utm_campaign=gg_nam_dg_search_brand_en&amp;utm_source=google&amp;utm_medium=cpc&amp;utm_term=bynder&amp;_bm=e&amp;_bn=g&amp;gad_source=1&amp;gad_campaignid=15420174945&amp;gbraid=0AAAAADxEUHyXchOluwF67gLSo832j0FHZ&amp;gclid=Cj0KCQjwm6POBhCrARIsAIG58CJ-wckgHgtfx-bU2KRGe-9XZGk4oikShP6VpbJZJJmEB_WtmMhMPdIaAjKOEALw_wcB</a> &middot;
+      March 29, 2026 at 09:50 PM
+    </p>
+  </div>
+
+  <div class="content">
+    <a class="back-link" href="/">&larr; Run another audit</a>
+
+    <!-- Executive Summary -->
+    <div class="summary-card">
+      <h2>Executive Summary</h2>
+      <p>Bynder&#39;s website is designed for enterprise SaaS lead generation and performs well in conversion elements like social proof, CTAs, and value proposition. However, it has significant lead leaks due to the complete absence of direct contact methods (no phone number, email, or live chat), forcing all interactions through a lengthy form. The site excels at follow-up mechanisms with newsletters, active blog content, and social links.</p>
+    </div>
+
+    <!-- Leak Counts -->
+    <div class="leak-counts">
+      <div class="count-box">
+        <div class="number">5</div>
+        <div class="label">Lead Leaks</div>
+      </div>
+      <div class="count-box">
+        <div class="number">3</div>
+        <div class="label">Conversion Leaks</div>
+      </div>
+      <div class="count-box">
+        <div class="number">1</div>
+        <div class="label">Follow-Up Leaks</div>
+      </div>
+      <div class="count-box total">
+        <div class="number">9</div>
+        <div class="label">Total Leaks</div>
+      </div>
+    </div>
+
+    <!-- Lead Leaks -->
+    <div class="section">
+      <h2 class="section-title">Lead Leaks</h2>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No phone number visible anywhere on the site</span>
+          <span class="badge badge-high">High</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Enterprise buyers who prefer phone contact or need immediate answers cannot reach sales directly, potentially losing high-intent leads.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add a clickable phone number in the header and on the demo/contact page for enterprise sales inquiries.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No email address visible for sales or general inquiries</span>
+          <span class="badge badge-high">High</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Prospects who prefer email communication or have pre-sales questions have no alternative to filling out the full demo form.</div>
+        <div class="finding-row"><strong>Fix:</strong> Display a sales email address (e.g., sales@bynder.com) in the footer and contact section.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No live chat widget present</span>
+          <span class="badge badge-medium">Medium</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Visitors with quick questions during their browsing session cannot get instant answers, reducing engagement and qualification opportunities.</div>
+        <div class="finding-row"><strong>Fix:</strong> Implement a live chat or chatbot for immediate visitor engagement and qualification.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No visible Google Business/Maps integration</span>
+          <span class="badge badge-low">Low</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Limited impact for a global SaaS platform, but local office locations could build trust and facilitate in-person meetings.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add office locations with Google Maps integration in the footer or contact page.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Contact form is lengthy and requires multiple fields including Country and State selection</span>
+          <span class="badge badge-medium">Medium</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Form friction may cause drop-offs before submission, especially for early-stage prospects just wanting information.</div>
+        <div class="finding-row"><strong>Fix:</strong> Offer a simplified &#34;quick contact&#34; option alongside the full demo request form.</div>
+      </div>
+      
+    </div>
+
+    <!-- Conversion Leaks -->
+    <div class="section">
+      <h2 class="section-title">Conversion Leaks</h2>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Multiple competing CTAs above the fold (&#34;Schedule a demo&#34;, &#34;Discovery call with an expert&#34;, &#34;Get pricing info&#34;)</span>
+          <span class="badge badge-medium">Medium</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Three different CTAs may create decision paralysis instead of driving a single clear action.</div>
+        <div class="finding-row"><strong>Fix:</strong> Make &#34;Schedule a demo&#34; the primary CTA and position &#34;Get pricing info&#34; as secondary.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Headline &#34;The next era of digital asset management&#34; is vague and doesn&#39;t clearly communicate what the business does</span>
+          <span class="badge badge-medium">Medium</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> First-time visitors may not immediately understand the specific solution Bynder provides.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add a subheadline that explicitly states &#34;Enterprise Digital Asset Management Platform&#34; or include the descriptor more prominently.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Value proposition requires scrolling to fully understand the product</span>
+          <span class="badge badge-low">Low</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Some visitors may bounce before understanding the complete value proposition.</div>
+        <div class="finding-row"><strong>Fix:</strong> Consolidate the core value proposition into a single above-the-fold statement.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Strong social proof present with customer testimonials, G2 rating (#1 Enterprise DAM), Forrester Wave leader designation, and 4000+ customers</span>
+          <span class="badge badge-none (positive finding)">None (Positive finding)</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> This is well-executed and builds credibility effectively.</div>
+        <div class="finding-row"><strong>Fix:</strong> No fix needed - this is a strength.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Trust signals present including &#34;Voted #1 Enterprise DAM solution on G2&#34;, Forrester Wave leader status, security certifications mentioned, and 4000+ customers</span>
+          <span class="badge badge-none (positive finding)">None (Positive finding)</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Multiple trust signals effectively establish authority and credibility.</div>
+        <div class="finding-row"><strong>Fix:</strong> No fix needed - this is a strength.</div>
+      </div>
+      
+    </div>
+
+    <!-- Follow-Up Leaks -->
+    <div class="section">
+      <h2 class="section-title">Follow-Up Leaks</h2>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Email newsletter signup is present in the footer (&#34;Subscribe to our monthly newsletter&#34;)</span>
+          <span class="badge badge-none (positive finding)">None (Positive finding)</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Captures leads who aren&#39;t ready for a demo but want to stay informed.</div>
+        <div class="finding-row"><strong>Fix:</strong> No fix needed - this is implemented.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No visible lead magnet (downloadable guide, checklist, or resource) offered in exchange for email</span>
+          <span class="badge badge-medium">Medium</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Missing opportunity to capture early-stage leads who aren&#39;t ready for a demo but want educational content.</div>
+        <div class="finding-row"><strong>Fix:</strong> Create a prominent lead magnet offer (e.g., &#34;DAM Buyer&#39;s Guide&#34; or &#34;ROI Calculator&#34;) above the fold or in a sidebar.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Blog content is present with references to recent content (&#34;Blog Marketing and industry insights&#34;)</span>
+          <span class="badge badge-none (positive finding - assuming regularly updated)">None (Positive finding - assuming regularly updated)</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Supports SEO and provides nurture content for prospects.</div>
+        <div class="finding-row"><strong>Fix:</strong> No fix needed - blog infrastructure exists.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Social media links present in footer (Facebook, LinkedIn, Twitter, YouTube)</span>
+          <span class="badge badge-none (positive finding)">None (Positive finding)</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Allows prospects to follow and engage on their preferred platforms.</div>
+        <div class="finding-row"><strong>Fix:</strong> No fix needed - this is implemented.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Multiple downloadable resources mentioned (&#34;Download features overview&#34;, Forrester Wave report, ROI guide, State of DAM report)</span>
+          <span class="badge badge-none (positive finding)">None (Positive finding)</span>
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Provides multiple entry points for lead capture at different buyer stages.</div>
+        <div class="finding-row"><strong>Fix:</strong> No fix needed - strong content strategy is in place.</div>
+      </div>
+      
+    </div>
+
+    <!-- Priority Fixes -->
+    <div class="priorities">
+      <h2>Priority Fixes</h2>
+      <ol>
+        
+        <li>Add a phone number with click-to-call functionality in the header and contact section for enterprise sales inquiries</li>
+        
+        <li>Display a sales email address prominently to provide an alternative contact method beyond the form</li>
+        
+        <li>Create and prominently feature a downloadable lead magnet (e.g., &#34;Enterprise DAM Buyer&#39;s Guide&#34;) to capture early-stage leads</li>
+        
+      </ol>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Generated by <a href="/">Stop the Leak</a></p>
+  </div>
+</body>
+</html>

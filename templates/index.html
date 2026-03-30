@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stop the Leak — Is Your Website Leaking Leads?</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #09101d;
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background glow */
+    .bg-glow {
+      position: fixed;
+      top: -30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 6rem 2rem 3rem;
+      text-align: center;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #dc2626;
+      margin-bottom: 2rem;
+    }
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      background: #dc2626;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+    }
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+    h1 span { color: #ef4444; }
+    .subtitle {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-bottom: 3rem;
+      line-height: 1.5;
+    }
+
+    /* Form Card */
+    .form-card {
+      background: linear-gradient(135deg, #111827 0%, #1a2236 100%);
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 540px;
+      margin: 0 auto;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+    form { display: flex; flex-direction: column; gap: 1.2rem; }
+    label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid #2d3a4f;
+      border-radius: 10px;
+      background: #0c1322;
+      color: #f1f5f9;
+      font-size: 1.05rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.15);
+    }
+    input::placeholder { color: #3e4c63; }
+    .optional { font-weight: 400; color: #4a5568; text-transform: none; letter-spacing: 0; }
+    button {
+      margin-top: 0.5rem;
+      padding: 1rem;
+      background: #dc2626;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+      position: relative;
+      overflow: hidden;
+    }
+    button:hover {
+      background: #b91c1c;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(220,38,38,0.35);
+    }
+    button:active { transform: translateY(0); }
+
+    /* Loading state */
+    button .btn-text { transition: opacity 0.2s; }
+    button.loading .btn-text { opacity: 0; }
+    button .spinner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    button.loading .spinner { opacity: 1; }
+    .loading-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    /* Trust Signals */
+    .trust {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .trust-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(220,38,38,0.08);
+      border: 1px solid rgba(220,38,38,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    /* What Gets Audited */
+    .audit-section {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 4rem 2rem 2rem;
+    }
+    .audit-section h2 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .audit-section .section-sub {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    .audit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .audit-card {
+      background: linear-gradient(135deg, #111827 0%, #151e2e 100%);
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 2rem 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .audit-card:hover {
+      border-color: #334155;
+      transform: translateY(-2px);
+    }
+    .audit-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    .audit-card:nth-child(1) .audit-card-icon { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .audit-card:nth-child(2) .audit-card-icon { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .audit-card:nth-child(3) .audit-card-icon { background: rgba(99,102,241,0.12); color: #818cf8; }
+    .audit-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .audit-card p {
+      font-size: 0.88rem;
+      color: #94a3b8;
+      line-height: 1.55;
+    }
+
+    /* Footer */
+    .footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 3rem 2rem;
+      font-size: 0.8rem;
+      color: #334155;
+    }
+    .footer span { color: #475569; }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 2.2rem; }
+      .subtitle { font-size: 1.05rem; }
+      .form-card { padding: 1.5rem; }
+      .audit-grid { grid-template-columns: 1fr; }
+      .trust { gap: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="hero">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      Stop the Leak
+    </div>
+    <h1>Is Your Website <span>Leaking Leads?</span></h1>
+    <p class="subtitle">Paste any business URL and get a free AI-powered audit in 60 seconds</p>
+
+    <div class="form-card">
+      <form action="/audit" method="POST" id="audit-form">
+        <div>
+          <label for="url">Website URL</label>
+          <input type="url" id="url" name="url" placeholder="https://example.com" required>
+        </div>
+        <div>
+          <label for="business_name">Business Name <span class="optional">(optional)</span></label>
+          <input type="text" id="business_name" name="business_name" placeholder="Acme Plumbing">
+        </div>
+        <button type="submit" id="submit-btn">
+          <span class="btn-text">Run Free Audit</span>
+          <span class="spinner">
+            <span class="loading-text">Scanning site...</span>
+          </span>
+        </button>
+      </form>
+    </div>
+
+    <div class="trust">
+      <div class="trust-item">
+        <div class="trust-icon">&#x2699;</div>
+        AI-Powered Analysis
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">&#x26A1;</div>
+        60-Second Results
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">&#x2714;</div>
+        Zero Setup Required
+      </div>
+    </div>
+  </div>
+
+  <div class="audit-section">
+    <h2>What Gets Audited</h2>
+    <p class="section-sub">Three categories. Every gap identified. Nothing missed.</p>
+    <div class="audit-grid">
+      <div class="audit-card">
+        <div class="audit-card-icon">1</div>
+        <h3>Lead Leaks</h3>
+        <p>Missing contact forms, buried phone numbers, no live chat &mdash; every way a visitor tries to reach you and can't.</p>
+      </div>
+      <div class="audit-card">
+        <div class="audit-card-icon">2</div>
+        <h3>Conversion Leaks</h3>
+        <p>Weak headlines, no clear CTA, missing social proof &mdash; the reasons visitors leave without taking action.</p>
+      </div>
+      <div class="audit-card">
+        <div class="audit-card-icon">3</div>
+        <h3>Follow-Up Leaks</h3>
+        <p>No email capture, stale blog, missing social links &mdash; lost opportunities to stay in touch and nurture leads.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Powered by <span>Claude AI</span>
+  </div>
+
+  <script>
+    const form = document.getElementById('audit-form');
+    const btn = document.getElementById('submit-btn');
+    const loadingText = btn.querySelector('.loading-text');
+    const messages = ['Scanning site...', 'Analyzing content...', 'Generating report...'];
+
+    form.addEventListener('submit', function() {
+      btn.classList.add('loading');
+      btn.disabled = true;
+      let i = 0;
+      setInterval(function() {
+        i = (i + 1) % messages.length;
+        loadingText.textContent = messages[i];
+      }, 2500);
+    });
+  </script>
+</body>
+</html>

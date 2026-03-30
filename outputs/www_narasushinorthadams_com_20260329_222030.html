@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leak Report — www.narasushinorthadams.com</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #09101d;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #0f1729 0%, #162033 100%);
+      border-bottom: 2px solid #dc2626;
+      padding: 2rem 2.5rem 1.8rem;
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .header-left {}
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #dc2626;
+      margin-bottom: 0.6rem;
+    }
+    .brand-tag-dot {
+      width: 6px;
+      height: 6px;
+      background: #dc2626;
+      border-radius: 50%;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .meta {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-top: 0.4rem;
+    }
+    .meta a { color: #60a5fa; text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+
+    /* Leak Score Gauge */
+    .score-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .score-ring {
+      position: relative;
+      width: 110px;
+      height: 110px;
+    }
+    .score-ring svg {
+      width: 110px;
+      height: 110px;
+      transform: rotate(-90deg);
+    }
+    .score-ring circle {
+      fill: none;
+      stroke-width: 8;
+    }
+    .score-ring .ring-bg { stroke: #1e293b; }
+    .score-ring .ring-fg {
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1.2s ease-out, stroke 0.3s;
+    }
+    .score-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    .score-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-weight: 700;
+      margin-top: 0.4rem;
+    }
+
+    /* Layout */
+    .content { max-width: 960px; margin: 0 auto; padding: 2rem 2.5rem; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 1.8rem;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: #94a3b8; }
+
+    /* Executive Summary */
+    .summary-card {
+      background: linear-gradient(135deg, #111827 0%, #162033 100%);
+      border-left: 4px solid #dc2626;
+      border-radius: 12px;
+      padding: 1.6rem 1.8rem;
+      margin-bottom: 2rem;
+    }
+    .summary-card h2 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .summary-card p { font-size: 1.05rem; color: #cbd5e1; line-height: 1.65; }
+
+    /* Leak Count Bar */
+    .leak-counts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .count-box {
+      background: linear-gradient(135deg, #111827 0%, #151e2e 100%);
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .count-box:hover { transform: translateY(-2px); }
+    .count-box .number {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #f87171;
+      line-height: 1;
+    }
+    .count-box .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      font-weight: 600;
+      margin-top: 0.4rem;
+    }
+    .count-box.total {
+      border-color: #dc2626;
+      background: linear-gradient(135deg, #1a0a0a 0%, #1e1015 100%);
+    }
+    .count-box.total .number { color: #ef4444; font-size: 2.8rem; }
+
+    /* Section */
+    .section { margin-bottom: 2.5rem; }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid #1e293b;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .section:nth-of-type(1) .section-title-icon { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .section:nth-of-type(2) .section-title-icon { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .section:nth-of-type(3) .section-title-icon { background: rgba(99,102,241,0.12); color: #818cf8; }
+
+    /* Finding Card */
+    .finding {
+      background: linear-gradient(135deg, #111827 0%, #151e2e 100%);
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1.3rem 1.5rem;
+      margin-bottom: 0.7rem;
+      transition: border-color 0.15s;
+    }
+    .finding:hover { border-color: #334155; }
+    .finding-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .finding-text { font-weight: 600; font-size: 1rem; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-high { background: rgba(220,38,38,0.15); color: #fca5a5; border: 1px solid rgba(220,38,38,0.25); }
+    .badge-medium { background: rgba(217,119,6,0.15); color: #fde68a; border: 1px solid rgba(217,119,6,0.25); }
+    .badge-low { background: rgba(22,101,52,0.15); color: #86efac; border: 1px solid rgba(22,101,52,0.25); }
+    .badge-none {
+      background: rgba(34,197,94,0.1);
+      color: #4ade80;
+      border: 1px solid rgba(34,197,94,0.2);
+      gap: 0.3rem;
+    }
+    .badge-none .check { font-size: 0.8rem; }
+    .finding-row {
+      font-size: 0.88rem;
+      color: #94a3b8;
+      margin-top: 0.35rem;
+    }
+    .finding-row strong { color: #cbd5e1; }
+
+    /* Priority Fixes */
+    .priorities {
+      background: linear-gradient(135deg, #1a1608 0%, #1e1a0d 100%);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-left: 4px solid #f59e0b;
+      border-radius: 14px;
+      padding: 2rem 2.2rem;
+      margin-bottom: 2.5rem;
+    }
+    .priorities h2 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .priorities .priorities-sub {
+      font-size: 0.88rem;
+      color: #92854a;
+      margin-bottom: 1.4rem;
+    }
+    .priority-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid rgba(245,158,11,0.08);
+    }
+    .priority-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .priority-num {
+      min-width: 36px;
+      height: 36px;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #fbbf24;
+    }
+    .priority-text {
+      font-size: 1.05rem;
+      color: #e2e8f0;
+      font-weight: 500;
+      line-height: 1.5;
+      padding-top: 0.3rem;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2.5rem;
+      font-size: 0.78rem;
+      color: #334155;
+      border-top: 1px solid #111827;
+    }
+    .footer a {
+      color: #475569;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer a:hover { color: #64748b; }
+
+    /* Animations */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .count-box .number {
+      animation: countUp 0.6s ease-out both;
+    }
+    .count-box:nth-child(1) .number { animation-delay: 0.1s; }
+    .count-box:nth-child(2) .number { animation-delay: 0.25s; }
+    .count-box:nth-child(3) .number { animation-delay: 0.4s; }
+    .count-box:nth-child(4) .number { animation-delay: 0.55s; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .finding { animation: fadeIn 0.4s ease-out both; }
+    .section:nth-of-type(1) .finding:nth-child(1) { animation-delay: 0.05s; }
+    .section:nth-of-type(1) .finding:nth-child(2) { animation-delay: 0.1s; }
+    .section:nth-of-type(1) .finding:nth-child(3) { animation-delay: 0.15s; }
+    .section:nth-of-type(1) .finding:nth-child(4) { animation-delay: 0.2s; }
+    .section:nth-of-type(1) .finding:nth-child(5) { animation-delay: 0.25s; }
+
+    @media (max-width: 700px) {
+      .header-inner { flex-direction: column; gap: 1.5rem; }
+      .score-wrap { align-items: flex-start; }
+      .leak-counts { grid-template-columns: repeat(2, 1fr); }
+      .content { padding: 1.5rem; }
+      .header { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with Leak Score -->
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="brand-tag"><div class="brand-tag-dot"></div> Leak Report</div>
+        <h1>www.narasushinorthadams.com</h1>
+        <p class="meta">
+          <a href="https://www.narasushinorthadams.com" target="_blank" rel="noopener">www.narasushinorthadams.com</a>
+          &nbsp;&middot;&nbsp; March 29, 2026 at 10:20 PM
+        </p>
+      </div>
+      <div class="score-wrap">
+        
+        
+        
+        
+          
+          
+        
+          
+          
+        
+          
+          
+        
+          
+        
+          
+          
+        
+          
+        
+          
+          
+        
+          
+          
+        
+          
+          
+        
+          
+        
+          
+          
+        
+        
+        
+        <div class="score-ring">
+          <svg viewBox="0 0 110 110">
+            <circle class="ring-bg" cx="55" cy="55" r="46" />
+            <circle class="ring-fg" cx="55" cy="55" r="46"
+              stroke="#ef4444"
+              stroke-dasharray="289"
+              stroke-dashoffset="271.66"
+              data-target="271.66" />
+          </svg>
+          <div class="score-value" style="color: #ef4444">
+            <span data-count="6">0</span>
+          </div>
+        </div>
+        <div class="score-label">Leak Score</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <a class="back-link" href="/">&larr; Run another audit</a>
+
+    <!-- Executive Summary -->
+    <div class="summary-card">
+      <h2>Executive Summary</h2>
+      <p>Nara Sushi has a functional ordering system but is missing critical contact and engagement opportunities. The site lacks email visibility, live chat, and any follow-up mechanisms to capture repeat business. While the ordering CTA is clear and testimonials are present, the absence of email capture, social links, and content marketing represents significant missed revenue opportunities.</p>
+    </div>
+
+    <!-- Leak Counts -->
+    <div class="leak-counts">
+      <div class="count-box">
+        <div class="number" data-count="4">0</div>
+        <div class="label">Lead Leaks</div>
+      </div>
+      <div class="count-box">
+        <div class="number" data-count="3">0</div>
+        <div class="label">Conversion Leaks</div>
+      </div>
+      <div class="count-box">
+        <div class="number" data-count="4">0</div>
+        <div class="label">Follow-Up Leaks</div>
+      </div>
+      <div class="count-box total">
+        <div class="number" data-count="11">0</div>
+        <div class="label">Total Leaks</div>
+      </div>
+    </div>
+
+    <!-- Lead Leaks -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">1</span>
+        Lead Leaks
+      </h2>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No email address is visible anywhere on the site</span>
+          
+            <span class="badge badge-high">High</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Customers who prefer email contact or have questions before ordering have no way to reach out, resulting in lost inquiries and orders.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add a visible email address in the contact section and footer, ideally as a clickable mailto: link.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No live chat widget is present</span>
+          
+            <span class="badge badge-medium">Medium</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Real-time questions about menu items, allergens, or orders go unanswered, causing potential customers to abandon their inquiry.</div>
+        <div class="finding-row"><strong>Fix:</strong> Implement a live chat solution like Tidio, Intercom, or Facebook Messenger integration to capture immediate inquiries.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Contact form exists but appears to have no clear purpose or response expectation</span>
+          
+            <span class="badge badge-medium">Medium</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Users who fill out the &#34;Send A Message&#34; form don&#39;t know what to expect or when they&#39;ll hear back, reducing form completion rates.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add text above the form clarifying response time (e.g., &#34;We&#39;ll respond within 24 hours&#34;) and what it should be used for.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Google Maps integration exists only as a directions link, not an embedded map or business profile widget</span>
+          
+            <span class="badge badge-low">Low</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Visitors cannot see location context, nearby landmarks, or read Google reviews without leaving the site.</div>
+        <div class="finding-row"><strong>Fix:</strong> Embed a Google Maps iframe showing the restaurant location and consider adding a Google Reviews widget.</div>
+      </div>
+      
+    </div>
+
+    <!-- Conversion Leaks -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">2</span>
+        Conversion Leaks
+      </h2>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No value proposition is clearly stated beyond generic menu item names</span>
+          
+            <span class="badge badge-medium">Medium</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> First-time visitors don&#39;t understand what makes Nara Sushi different from competitors, reducing conversion likelihood.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add a headline or tagline communicating unique value (e.g., &#34;Fresh, Affordable Sushi in North Adams&#34; or &#34;Authentic Japanese Cuisine Beyond Sushi&#34;).</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No trust signals such as years in business, certifications, or awards are displayed</span>
+          
+            <span class="badge badge-low">Low</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> New customers have no credibility markers beyond testimonials, potentially reducing trust for first-time orders.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add trust indicators like &#34;Family Owned Since [YEAR]&#34; or food safety certifications if applicable.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">Only one image is present on the entire site</span>
+          
+            <span class="badge badge-medium">Medium</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Food is a visual product; lack of appetizing food photography significantly reduces ordering impulse and appetite appeal.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add high-quality images of popular dishes like Dragon Roll, Bibimbap, and salmon sashimi mentioned in reviews.</div>
+      </div>
+      
+    </div>
+
+    <!-- Follow-Up Leaks -->
+    <div class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">3</span>
+        Follow-Up Leaks
+      </h2>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No email capture mechanism or lead magnet exists</span>
+          
+            <span class="badge badge-high">High</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Every website visitor who doesn&#39;t order immediately is lost forever with no way to re-engage them with promotions or reminders.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add an email signup offering 10% off first order or a free appetizer to build a marketing list.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No newsletter signup is present</span>
+          
+            <span class="badge badge-high">High</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> The business cannot announce new menu items, specials, or events to past customers, losing repeat order opportunities.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add a newsletter signup in the footer with clear benefit (&#34;Get weekly specials delivered to your inbox&#34;).</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No blog or content section exists</span>
+          
+            <span class="badge badge-low">Low</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Missed SEO opportunities and no way to engage customers with content about Japanese cuisine, recipes, or restaurant updates.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add a simple blog with monthly posts about menu items, Japanese food culture, or behind-the-scenes content.</div>
+      </div>
+      
+      <div class="finding">
+        <div class="finding-header">
+          <span class="finding-text">No social media links are visible anywhere on the site</span>
+          
+            <span class="badge badge-medium">Medium</span>
+          
+        </div>
+        <div class="finding-row"><strong>Impact:</strong> Cannot build a social following, share user-generated content, or engage customers on platforms they use daily.</div>
+        <div class="finding-row"><strong>Fix:</strong> Add social media icons linking to Facebook, Instagram, and any other active profiles in the header or footer.</div>
+      </div>
+      
+    </div>
+
+    <!-- Priority Fixes -->
+    <div class="priorities">
+      <h2>Action Plan</h2>
+      <p class="priorities-sub">Fix these first for the biggest impact on lead capture</p>
+      
+      <div class="priority-item">
+        <div class="priority-num">1</div>
+        <div class="priority-text">Add email capture with incentive (10% off) immediately below testimonials to build marketing list</div>
+      </div>
+      
+      <div class="priority-item">
+        <div class="priority-num">2</div>
+        <div class="priority-text">Display email address prominently in contact section and add live chat widget for immediate inquiries</div>
+      </div>
+      
+      <div class="priority-item">
+        <div class="priority-num">3</div>
+        <div class="priority-text">Add social media links and implement newsletter signup in footer to enable ongoing customer engagement</div>
+      </div>
+      
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Generated by <a href="/">Stop the Leak</a> &nbsp;&middot;&nbsp; Powered by Claude AI</p>
+  </div>
+
+  <script>
+    // Animate numbers counting up from 0
+    document.querySelectorAll('[data-count]').forEach(function(el) {
+      var target = parseInt(el.getAttribute('data-count'), 10);
+      if (isNaN(target) || target === 0) { el.textContent = '0'; return; }
+      var duration = 1200;
+      var start = null;
+      function step(ts) {
+        if (!start) start = ts;
+        var progress = Math.min((ts - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(eased * target);
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+
+    // Animate score ring
+    document.querySelectorAll('.ring-fg').forEach(function(circle) {
+      var target = parseFloat(circle.getAttribute('data-target'));
+      circle.style.strokeDashoffset = '289';
+      setTimeout(function() {
+        circle.style.strokeDashoffset = target;
+      }, 200);
+    });
+  </script>
+</body>
+</html>

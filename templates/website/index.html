@@ -506,6 +506,23 @@
     .spotlight-group.has-hover > .spotlight-active h3 {
       filter: brightness(1.15);
     }
+
+    /* Number-specific spotlight enhancements */
+    .step-num,
+    .audit-icon {
+      transition: background 0.25s ease, color 0.25s ease, text-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .spotlight-group.has-hover > .spotlight-active .step-num,
+    .spotlight-group.has-hover > .spotlight-active .audit-icon {
+      background: rgba(220, 38, 38, 0.25);
+      color: #ff4444;
+      text-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
+      border-color: rgba(220, 38, 38, 0.5);
+    }
+    .spotlight-group.has-hover > .spotlight-active.step,
+    .spotlight-group.has-hover > .spotlight-active.audit-card {
+      background: radial-gradient(circle at 50% 20%, rgba(220, 38, 38, 0.06) 0%, transparent 60%), var(--bg-card);
+    }
   </style>
 </head>
 <body>

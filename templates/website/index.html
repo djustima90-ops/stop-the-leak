@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stop the Leak — Find Where Your Website Is Bleeding Money</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #dc2626;
+      --red-glow: rgba(220, 38, 38, 0.35);
+      --bg-deep: #050a12;
+      --bg-card: #0a1020;
+      --bg-card-border: #141e35;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim: #334155;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ==================== NAV ==================== */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 10, 18, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(20, 30, 53, 0.6);
+    }
+    .nav-brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: navPulse 2s ease-in-out infinite;
+    }
+    @keyframes navPulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--red-glow); }
+      50% { box-shadow: 0 0 0 6px transparent; }
+    }
+    .nav-cta {
+      padding: 0.55rem 1.3rem;
+      background: var(--red);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px var(--red-glow);
+    }
+
+    /* ==================== PERSONAL BRAND LINE ==================== */
+    .personal-brand {
+      text-align: center;
+      padding: 6rem 2rem 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      font-weight: 500;
+    }
+
+    /* ==================== WHO THIS IS FOR ==================== */
+    .audience-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .audience-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: 2rem 1.6rem;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .audience-card:hover {
+      border-color: rgba(220, 38, 38, 0.3);
+      transform: translateY(-3px);
+    }
+    .audience-card .audience-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .audience-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ==================== ABOUT ==================== */
+    .about-blurb {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      max-width: 680px;
+    }
+
+    /* ==================== PERSONAL CTA ==================== */
+    .personal-cta {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .personal-cta h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.6rem;
+    }
+    .personal-cta p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 0.4rem;
+    }
+    .personal-cta .contact-email {
+      color: var(--red);
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+    .personal-cta .contact-email:hover {
+      text-decoration: underline;
+    }
+    .personal-cta .book-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.2rem;
+      padding: 0.85rem 2rem;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .personal-cta .book-btn:hover {
+      border-color: var(--red);
+      transform: translateY(-1px);
+    }
+
+    /* ==================== HERO ==================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 900px;
+      background: radial-gradient(ellipse at center, rgba(220, 38, 38, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--red);
+      margin-bottom: 1.5rem;
+      padding: 0.4rem 1rem;
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      border-radius: 999px;
+      background: rgba(220, 38, 38, 0.06);
+    }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      max-width: 820px;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 .highlight {
+      color: var(--red);
+      position: relative;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1rem 2.4rem;
+      background: var(--red);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 30px var(--red-glow);
+    }
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px var(--red-glow);
+    }
+    .hero-cta .arrow {
+      font-size: 1.3rem;
+      transition: transform 0.2s;
+    }
+    .hero-cta:hover .arrow {
+      transform: translateX(3px);
+    }
+
+    /* ==================== STATS ==================== */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+      gap: 1px;
+      background: var(--bg-card-border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .stat {
+      background: var(--bg-card);
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .stat-number .dollar {
+      color: var(--red);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 500;
+    }
+
+    /* ==================== HOW IT WORKS ==================== */
+    .section {
+      padding: 5rem 2rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--red);
+      margin-bottom: 0.8rem;
+    }
+    .section h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 3rem;
+      line-height: 1.15;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .step {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      padding: 2rem 1.6rem;
+      position: relative;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .step:hover {
+      border-color: rgba(220, 38, 38, 0.3);
+      transform: translateY(-3px);
+    }
+    .step-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(220, 38, 38, 0.12);
+      line-height: 1;
+      margin-bottom: 0.8rem;
+    }
+    .step h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .step p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ==================== WHAT GETS AUDITED ==================== */
+    .audit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .audit-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-top: 3px solid var(--red);
+      border-radius: 12px;
+      padding: 2rem 1.6rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .audit-card:hover {
+      transform: translateY(-3px);
+    }
+    .audit-card .audit-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .audit-card:nth-child(1) .audit-icon { background: rgba(239, 68, 68, 0.1); }
+    .audit-card:nth-child(2) .audit-icon { background: rgba(245, 158, 11, 0.1); }
+    .audit-card:nth-child(3) .audit-icon { background: rgba(99, 102, 241, 0.1); }
+    .audit-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .audit-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+    .audit-list {
+      list-style: none;
+      margin-top: 0.8rem;
+    }
+    .audit-list li {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 0.3rem 0;
+      padding-left: 1rem;
+      position: relative;
+    }
+    .audit-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65rem;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    /* ==================== BOTTOM CTA ==================== */
+    .bottom-cta {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+    }
+    .bottom-cta h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+    .bottom-cta p {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+
+    /* ==================== FOOTER ==================== */
+    footer {
+      text-align: center;
+      padding: 2.5rem 2rem;
+      border-top: 1px solid var(--bg-card-border);
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+    footer strong {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 700px) {
+      .stats { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .audit-grid { grid-template-columns: 1fr; }
+      .audience-cards { grid-template-columns: 1fr; }
+      .hero { padding: 7rem 1.5rem 3rem; }
+      .section { padding: 3rem 1.5rem; }
+    }
+
+    /* ==================== ANIMATIONS ==================== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero-tag, .hero h1, .hero-sub, .hero-cta {
+      opacity: 0;
+      animation: fadeUp 0.7s ease-out forwards;
+    }
+    .hero-tag { animation-delay: 0.1s; }
+    .hero h1 { animation-delay: 0.25s; }
+    .hero-sub { animation-delay: 0.4s; }
+    .hero-cta { animation-delay: 0.55s; }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==================== SPOTLIGHT HOVER ==================== */
+    .spotlight-group > * {
+      transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .spotlight-group.has-hover > * {
+      opacity: 0.5;
+      filter: saturate(0.4);
+    }
+    .spotlight-group.has-hover > .spotlight-active {
+      opacity: 1;
+      filter: saturate(1);
+      transform: translateY(-3px);
+      box-shadow: 0 0 20px rgba(220, 38, 38, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-color: rgba(220, 38, 38, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/website" class="nav-brand">
+      <span class="nav-dot"></span>
+      Stop the Leak
+    </a>
+    <a href="/" class="nav-cta">Run Free Audit</a>
+  </nav>
+
+  <!-- PERSONAL BRAND -->
+  <div class="personal-brand">David Justima &middot; Revenue Strategy &amp; AI &middot; Williamstown, MA</div>
+
+  <!-- HERO -->
+  <section class="hero" style="padding-top: 2rem;">
+    <div class="hero-tag">AI-Powered Revenue Diagnostic</div>
+    <h1>We Find Where Your Website Is <span class="highlight">Bleeding Money</span></h1>
+    <p class="hero-sub">I scan your website with AI, find every place you're losing customers, and show you exactly what it's costing you &mdash; in real dollars.</p>
+    <a href="/" class="hero-cta">
+      Get Your Free Audit
+      <span class="arrow">&rarr;</span>
+    </a>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats fade-in">
+    <div class="stat">
+      <div class="stat-number"><span class="dollar">$</span>4,200<span class="dollar">/mo</span></div>
+      <div class="stat-label">Average identified</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Leaks found per audit</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">60<span class="dollar">s</span></div>
+      <div class="stat-label">To see your results</div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section fade-in">
+    <div class="section-label">How It Works</div>
+    <h2>Three steps. Sixty seconds. Full diagnosis.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Paste Your URL</h3>
+        <p>Drop in any business website. No login, no setup, no credit card.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>AI Analyzes Everything</h3>
+        <p>Our engine scrapes your homepage and audits every element that affects lead capture and conversion.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>See Your Losses</h3>
+        <p>Get a detailed report showing exactly where you're leaking revenue &mdash; with dollar estimates and priority fixes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT GETS AUDITED -->
+  <div class="section fade-in">
+    <div class="section-label">What Gets Audited</div>
+    <h2>Every crack where revenue escapes.</h2>
+    <div class="audit-grid">
+      <div class="audit-card">
+        <div class="audit-icon">1</div>
+        <h3>Lead Leaks</h3>
+        <p>Are prospects able to reach you?</p>
+        <ul class="audit-list">
+          <li>Contact form visibility</li>
+          <li>Clickable phone number</li>
+          <li>Email address presence</li>
+          <li>Live chat widget</li>
+          <li>Google Maps integration</li>
+        </ul>
+      </div>
+      <div class="audit-card">
+        <div class="audit-icon">2</div>
+        <h3>Conversion Leaks</h3>
+        <p>Does your site turn visitors into leads?</p>
+        <ul class="audit-list">
+          <li>Above-the-fold CTA</li>
+          <li>Clear headline &amp; value prop</li>
+          <li>Social proof &amp; reviews</li>
+          <li>Trust signals &amp; certifications</li>
+          <li>Mobile responsiveness</li>
+        </ul>
+      </div>
+      <div class="audit-card">
+        <div class="audit-icon">3</div>
+        <h3>Follow-Up Leaks</h3>
+        <p>Can you recapture visitors who leave?</p>
+        <ul class="audit-list">
+          <li>Lead magnet / email capture</li>
+          <li>Newsletter signup</li>
+          <li>Recent blog content</li>
+          <li>Social media presence</li>
+          <li>Retargeting capability</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHO THIS IS FOR -->
+  <div class="section fade-in">
+    <div class="section-label">Who This Is For</div>
+    <h2>Built for the businesses that make a town worth living in.</h2>
+    <div class="audience-cards">
+      <div class="audience-card">
+        <div class="audience-icon">&#127869;</div>
+        <h3>Local Restaurants &amp; Cafes</h3>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">&#128295;</div>
+        <h3>Home Service Contractors</h3>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">&#9986;&#65039;</div>
+        <h3>Retail Shops &amp; Salons</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="section fade-in">
+    <div class="section-label">About</div>
+    <h2>Why I built this.</h2>
+    <p class="about-blurb">I'm David &mdash; a revenue strategist based in the Berkshires. I built this tool after watching too many great local businesses lose customers to broken websites. No agency fees. No jargon. Just honest answers about where your money is going.</p>
+  </div>
+
+  <!-- PERSONAL CTA -->
+  <div class="personal-cta fade-in">
+    <h2>Have questions? Text or email me directly.</h2>
+    <p><a class="contact-email" href="mailto:hello@stoptheleak.com">hello@stoptheleak.com</a></p>
+    <a href="#" class="book-btn">Book a Free Call <span>&rarr;</span></a>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="bottom-cta fade-in">
+    <h2>Your website is losing money right now.</h2>
+    <p>Find out exactly how much &mdash; free, instant, no signup required.</p>
+    <a href="/" class="hero-cta">
+      Get Your Free Audit
+      <span class="arrow">&rarr;</span>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Built by <strong>David Justima</strong> &nbsp;|&nbsp; Revenue Strategy &amp; AI Tools &nbsp;|&nbsp; Williamstown, MA</p>
+  </footer>
+
+  <script>
+    // Intersection Observer for fade-in animations
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.fade-in').forEach(function(el) {
+      observer.observe(el);
+    });
+
+    // Spotlight hover effect for card groups
+    document.querySelectorAll('.audit-grid, .audience-cards, .steps').forEach(function(group) {
+      group.classList.add('spotlight-group');
+      var children = Array.prototype.slice.call(group.children);
+
+      children.forEach(function(card) {
+        card.addEventListener('mouseover', function() {
+          group.classList.add('has-hover');
+          children.forEach(function(c) { c.classList.remove('spotlight-active'); });
+          card.classList.add('spotlight-active');
+        });
+      });
+
+      group.addEventListener('mouseleave', function() {
+        group.classList.remove('has-hover');
+        children.forEach(function(c) { c.classList.remove('spotlight-active'); });
+      });
+    });
+  </script>
+</body>
+</html>

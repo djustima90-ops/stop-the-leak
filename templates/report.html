@@ -16,7 +16,7 @@
     /* Header */
     .header {
       background: linear-gradient(135deg, #0f1729 0%, #162033 100%);
-      border-bottom: 2px solid #dc2626;
+      border-bottom: 2px solid {{ brand.primary_color if brand and brand.primary_color else '#dc2626' }};
       padding: 2rem 2.5rem 1.8rem;
       position: sticky;
       top: 0;
@@ -347,6 +347,13 @@
       transition: border-color 0.15s, border-left-color 0.3s;
     }
     .finding:hover { border-color: #334155; }
+    .finding.finding-fixed {
+      border-left-color: #22c55e;
+      opacity: 0.5;
+    }
+    .finding.finding-fixed .finding-text {
+      text-decoration: line-through;
+    }
     .finding-header {
       display: flex;
       justify-content: space-between;
@@ -583,6 +590,76 @@
       border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
+    /* Email Capture Card */
+    .email-capture {
+      background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      border-left: 4px solid #dc2626;
+      border-radius: 14px;
+      padding: 2rem 2.2rem;
+      margin-bottom: 2rem;
+    }
+    .email-capture h3 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #e2e8f0;
+      margin-bottom: 0.3rem;
+    }
+    .email-capture .email-sub {
+      font-size: 0.92rem;
+      color: #64748b;
+      margin-bottom: 1.2rem;
+    }
+    .email-form {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .email-form input[type="email"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.75rem 1rem;
+      background: #0a0f1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .email-form input[type="email"]:focus {
+      border-color: #dc2626;
+    }
+    .email-form input[type="email"]::placeholder {
+      color: #475569;
+    }
+    .email-form button {
+      padding: 0.75rem 1.5rem;
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .email-form button:hover {
+      background: #b91c1c;
+    }
+    .email-form button:active {
+      transform: scale(0.97);
+    }
+    .email-success {
+      display: none;
+      color: #22c55e;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 0.8rem;
+    }
+
     /* Footer */
     .footer {
       text-align: center;
@@ -687,7 +764,12 @@
     <div class="header-inner">
       <div class="header-left">
         <div class="brand-tag"><div class="brand-tag-dot"></div> Leak Report</div>
-        <h1>{{ business_name }}</h1>
+        <h1 style="display:flex;align-items:center;gap:0.5rem;">
+          {% if brand and brand.logo_url %}
+          <img src="{{ brand.logo_url }}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #1e293b;">
+          {% endif %}
+          {{ business_name }}
+        </h1>
         <p class="meta">
           <a href="{{ url }}" target="_blank" rel="noopener">{{ url.split('//')[1].split('/')[0].split('?')[0] if '//' in url else url.split('/')[0].split('?')[0] }}</a>
           &nbsp;&middot;&nbsp; {{ timestamp }}
@@ -1001,6 +1083,17 @@
         {% endfor %}
       </div>
       {% endif %}
+    </div>
+
+    <!-- Email Capture -->
+    <div class="email-capture" id="email-capture">
+      <h3>Want us to fix these leaks for you?</h3>
+      <p class="email-sub">Enter your email and we'll send you a personalized fix plan</p>
+      <form class="email-form" id="email-form" onsubmit="return false;">
+        <input type="email" id="capture-email" placeholder="you@company.com" required>
+        <button type="submit" id="capture-btn">Send My Fix Plan</button>
+      </form>
+      <div class="email-success" id="email-success">&#x2713; We'll be in touch within 24 hours</div>
     </div>
   </div>
 
@@ -1372,6 +1465,27 @@
       requestAnimationFrame(animate);
     }
 
+    // ==================== Sync Finding Cards with Action Checkboxes ====================
+    function syncFindingCard(cb) {
+      var title = cb.closest('.action-check-item').querySelector('.action-check-title').textContent.trim();
+      document.querySelectorAll('.finding').forEach(function(card) {
+        var cardTitle = card.querySelector('.finding-text');
+        if (cardTitle && cardTitle.textContent.trim() === title) {
+          if (cb.checked) {
+            card.classList.add('finding-fixed');
+            var badges = card.querySelector('.finding-badges');
+            badges.setAttribute('data-original-html', badges.innerHTML);
+            badges.innerHTML = '<span class="badge badge-none"><span class="check">&#x2713;</span> Fixed</span>';
+          } else {
+            card.classList.remove('finding-fixed');
+            var badges = card.querySelector('.finding-badges');
+            var original = badges.getAttribute('data-original-html');
+            if (original) badges.innerHTML = original;
+          }
+        }
+      });
+    }
+
     // ==================== Action Report Checkboxes ====================
     function loadActionState() {
       try {
@@ -1389,6 +1503,9 @@
         updateSavingsDisplay(false);
         if (currentSavings > 0) updateBanner();
         updateGrade();
+        document.querySelectorAll('.action-checkbox').forEach(function(cb) {
+          if (cb.checked) syncFindingCard(cb);
+        });
       } catch (e) {}
     }
 
@@ -1424,10 +1541,44 @@
         updateBanner();
         updateGrade();
         saveActionState();
+        syncFindingCard(cb);
       });
     });
 
     loadActionState();
+
+    // ==================== Email Capture ====================
+    document.getElementById('email-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var emailInput = document.getElementById('capture-email');
+      var email = emailInput.value.trim();
+      if (!email) return;
+      var btn = document.getElementById('capture-btn');
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+      fetch('/capture-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          business_name: '{{ business_name | replace("'", "\\'") }}',
+          url: '{{ url | replace("'", "\\'") }}',
+          monthly_loss: totalMonthlyLoss,
+          annual_loss: totalMonthlyLoss * 12
+        })
+      }).then(function(res) {
+        if (res.ok) {
+          document.getElementById('email-form').style.display = 'none';
+          document.getElementById('email-success').style.display = 'block';
+        } else {
+          btn.textContent = 'Send My Fix Plan';
+          btn.disabled = false;
+        }
+      }).catch(function() {
+        btn.textContent = 'Send My Fix Plan';
+        btn.disabled = false;
+      });
+    });
   </script>
 </body>
 </html>

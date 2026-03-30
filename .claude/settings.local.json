@@ -15,7 +15,8 @@
       "Bash(python3 app.py)",
       "Read(//Users/davidjustima/Downloads/**)",
       "Read(//private/tmp/**)",
-      "Bash(ls ~/Downloads/modestas*)"
+      "Bash(ls ~/Downloads/modestas*)",
+      "Bash(python3:*)"
     ]
   }
 }

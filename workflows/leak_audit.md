@@ -37,21 +37,63 @@ Analyze the following website content and evaluate every check listed below. Be 
 
 ---
 
+## INDUSTRY INTELLIGENCE
+
+{industry_context}
+
+---
+
 ## MONTHLY LOSS ESTIMATION INSTRUCTIONS
 
-For EACH finding, you must also estimate how much revenue the business is losing per month because of that specific leak. Base your estimate on:
-- The type of business (inferred from the site content — e.g., plumber, dentist, restaurant, lawyer)
-- The severity of the finding (High = major revenue impact, Medium = moderate, Low = minor)
-- Realistic local business revenue assumptions (e.g., a local plumber might average $5,000-15,000/month in leads from their website; a dentist might average $10,000-30,000/month)
-- Be specific and defensible — explain your reasoning in terms of lost leads, missed conversions, or abandoned visitors
+For EACH finding, you must estimate how much revenue the business is losing per month because of that specific leak.
 
-General guidelines for estimation:
-- High severity findings for service businesses: $500-$3,000/month
-- Medium severity findings: $200-$1,000/month
-- Low severity findings: $50-$300/month
-- Adjust based on the specific business type and local market
+Use the industry data above to calculate loss estimates:
+- Use the Loss Multipliers provided — multiply the typical monthly revenue by the appropriate severity multiplier
+- High severity findings: use the high_loss_multiplier
+- Medium severity findings: use the medium_loss_multiplier
+- Low severity findings: use the low_loss_multiplier
+- Be specific and defensible — explain your reasoning in terms of lost leads, missed conversions, or abandoned visitors
+- Use the Language Style guidance to frame findings in terms the business owner will understand
+- Incorporate the Local Context to make findings feel relevant and specific
 
 At the end, sum all individual MONTHLY_LOSS_ESTIMATE values to produce a TOTAL_MONTHLY_LOSS.
+
+---
+
+## DOLLAR ESTIMATE CAPS BY INDUSTRY
+
+IMPORTANT: Individual finding estimates must NOT exceed these maximums. Match the business to the closest industry category:
+
+| Industry | Typical Monthly Revenue | HIGH max | MEDIUM max | LOW max |
+|---|---|---|---|---|
+| Restaurant/Cafe | $45K/month | $1,200/month | $500/month | $150/month |
+| Contractor/Home Services | $38K/month | $1,500/month | $700/month | $200/month |
+| Salon/Barbershop | $18K/month | $800/month | $350/month | $100/month |
+| Medical/Dental | $65K/month | $2,000/month | $900/month | $250/month |
+| Retail | $32K/month | $1,000/month | $450/month | $130/month |
+| Law/CPA | $35K/month | $1,800/month | $800/month | $200/month |
+| Gym/Fitness | $20K/month | $900/month | $400/month | $120/month |
+| Default (other) | $30K/month | $1,000/month | $450/month | $130/month |
+
+HARD RULE: Total annual loss (TOTAL_MONTHLY_LOSS x 12) should never exceed $80,000/year unless the business clearly supports higher revenue based on visible evidence (multiple locations, premium pricing, enterprise services).
+
+---
+
+## RESEARCH DATA — USE IN FINDINGS AND IMPACT STATEMENTS
+
+Reference these real statistics when writing findings and impact statements. Cite the relevant stat when it applies to a finding to make the impact concrete and credible.
+
+### SPEED TO LEAD
+Use when finding involves missing phone number, no contact form, no live chat, or no email address:
+"The average business takes 47 hours to respond to a new lead. By that point the prospect has contacted 3 competitors. Responding within 5 minutes makes a business 10x more likely to convert."
+
+### FOLLOW-UP LEAKS
+Use when finding involves no email capture, no newsletter, or no repeat customer mechanism:
+"80% of sales require at least 5 follow-ups but most businesses stop after 1 or 2. 79% of leads never convert because businesses fail to follow up. A warm lead is exponentially easier to convert than a cold stranger."
+
+### CONVERSION LEAKS
+Use when finding involves weak CTAs, no social proof, poor mobile experience, or complex forms:
+"The average website converts only 2-3% of visitors — 97% leave without taking action. Every friction point (extra click, missing trust signal, unclear CTA) compounds that loss."
 
 ---
 

@@ -1,0 +1,178 @@
+{
+  "restaurant": {
+    "name": "Restaurant / Cafe",
+    "typical_monthly_revenue": 45000,
+    "typical_annual_revenue": 540000,
+    "keywords": ["restaurant", "cafe", "diner", "pizza", "sushi", "bar", "grill", "bistro", "eatery", "food", "menu", "dining", "takeout", "delivery", "breakfast", "lunch", "dinner"],
+    "top_leak_patterns": [
+      "No online reservation or ordering system — losing 18% of potential covers",
+      "No email capture for repeat customer promotions and specials",
+      "No visible hours or phone number above the fold"
+    ],
+    "language_style": "direct and practical — restaurateurs are busy, respect their time, speak in covers and tables not clicks and conversions",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Berkshires restaurants serve both year-round locals and seasonal tourists from May-October, making online visibility critical during peak season"
+  },
+  "contractor": {
+    "name": "Contractor / Home Services",
+    "typical_monthly_revenue": 38000,
+    "typical_annual_revenue": 456000,
+    "keywords": ["plumber", "plumbing", "electrician", "electrical", "hvac", "heating", "cooling", "roofing", "roofer", "contractor", "construction", "remodeling", "renovation", "handyman", "landscaping", "painting", "flooring", "insulation"],
+    "top_leak_patterns": [
+      "No click-to-call phone number — contractors live and die by the phone call",
+      "No visible service area or emergency service availability",
+      "No customer reviews or testimonials visible on homepage"
+    ],
+    "language_style": "no-nonsense and results-focused — contractors are skeptical of marketing, lead with jobs won and revenue earned not impressions and click-through rates",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Western MA contractors face strong seasonal demand — heating season in fall/winter and renovation season in spring/summer — missing online leads during peak periods is especially costly"
+  },
+  "auto_repair": {
+    "name": "Auto Repair / Detailing",
+    "typical_monthly_revenue": 28000,
+    "typical_annual_revenue": 336000,
+    "keywords": ["auto", "car", "vehicle", "repair", "mechanic", "oil change", "tire", "brake", "transmission", "detailing", "body shop", "collision", "inspection"],
+    "top_leak_patterns": [
+      "No online appointment booking — customers will call a competitor who has it",
+      "No visible pricing for common services like oil changes",
+      "No Google reviews integration or social proof"
+    ],
+    "language_style": "straight-talking and trust-focused — auto shop owners are practical people who understand that reputation is everything in a small town",
+    "high_loss_multiplier": 0.09,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "In the Berkshires, word-of-mouth drives auto repair business but an online presence captures the tourist traffic and new residents who don't yet have a trusted mechanic"
+  },
+  "salon_barbershop": {
+    "name": "Salon / Barbershop",
+    "typical_monthly_revenue": 18000,
+    "typical_annual_revenue": 216000,
+    "keywords": ["salon", "hair", "barbershop", "barber", "beauty", "spa", "nails", "massage", "waxing", "stylist", "haircut", "color", "highlights"],
+    "top_leak_patterns": [
+      "No online booking system — clients book with whoever is easiest to reach",
+      "No stylist profiles or portfolio photos",
+      "No social media links showing current work"
+    ],
+    "language_style": "warm and relationship-focused — salon owners understand that clients choose a person not just a place, so speak to building personal connections online",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Berkshires salons serve a loyal local base plus seasonal visitors — Instagram and online booking are the two highest-ROI investments for this market"
+  },
+  "dental_medical": {
+    "name": "Dental / Medical / Chiropractic",
+    "typical_monthly_revenue": 65000,
+    "typical_annual_revenue": 780000,
+    "keywords": ["dentist", "dental", "doctor", "medical", "clinic", "chiropractic", "chiropractor", "physical therapy", "orthodontist", "optometrist", "physician", "healthcare", "health", "wellness", "therapy"],
+    "top_leak_patterns": [
+      "No online appointment request form — patients default to whoever makes booking easiest",
+      "No insurance information visible — patients skip sites that make them guess",
+      "No patient reviews or testimonials — trust is everything in healthcare"
+    ],
+    "language_style": "professional and reassuring — healthcare providers want to be seen as trustworthy, use language about patient experience and practice growth not lead generation",
+    "high_loss_multiplier": 0.07,
+    "medium_loss_multiplier": 0.035,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Berkshires healthcare practices compete for a limited local population — every lost patient represents significant lifetime value, and new residents actively search online for providers"
+  },
+  "retail": {
+    "name": "Retail / Gift Shop",
+    "typical_monthly_revenue": 22000,
+    "typical_annual_revenue": 264000,
+    "keywords": ["shop", "store", "boutique", "gift", "retail", "clothing", "apparel", "jewelry", "antique", "gallery", "art", "craft", "handmade", "vintage"],
+    "top_leak_patterns": [
+      "No e-commerce or online ordering — missing sales from visitors who want to buy after their trip",
+      "No email list capture for new arrivals and seasonal promotions",
+      "No visible store hours or location with map"
+    ],
+    "language_style": "visual and experience-driven — retail owners think in foot traffic and average ticket size, connect online presence to in-store visits",
+    "high_loss_multiplier": 0.09,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Berkshires retail thrives on tourist season foot traffic from May-October, but an online presence extends revenue year-round and captures post-visit purchases from visitors who fell in love with a product"
+  },
+  "legal": {
+    "name": "Law Firm / Attorney",
+    "typical_monthly_revenue": 55000,
+    "typical_annual_revenue": 660000,
+    "keywords": ["attorney", "lawyer", "law firm", "legal", "litigation", "estate planning", "real estate law", "family law", "criminal defense", "personal injury", "bankruptcy"],
+    "top_leak_patterns": [
+      "No free consultation offer or intake form — potential clients call whoever makes it easiest",
+      "No practice area pages with clear descriptions of services",
+      "No attorney bios with credentials and experience"
+    ],
+    "language_style": "authoritative but approachable — attorneys want to project competence, frame findings in terms of client acquisition cost and case value",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Western MA legal market is relationship-driven but increasingly competitive online — residents searching for attorneys start with Google, and the first firm with a clear intake process wins the client"
+  },
+  "real_estate": {
+    "name": "Real Estate / Property Management",
+    "typical_monthly_revenue": 42000,
+    "typical_annual_revenue": 504000,
+    "keywords": ["real estate", "realtor", "property", "homes", "houses", "rental", "apartment", "broker", "listing", "mortgage", "realty"],
+    "top_leak_patterns": [
+      "No IDX property search or featured listings on homepage",
+      "No lead capture for buyer/seller inquiries",
+      "No neighborhood or market data to establish local expertise"
+    ],
+    "language_style": "market-savvy and relationship-oriented — agents think in transactions and commission, connect online presence to listing appointments and buyer consultations",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Berkshires real estate is driven by second-home buyers from NYC and Boston — these buyers research extensively online before contacting an agent, making web presence critical for capturing high-value leads"
+  },
+  "fitness": {
+    "name": "Fitness / Gym / Yoga",
+    "typical_monthly_revenue": 15000,
+    "typical_annual_revenue": 180000,
+    "keywords": ["gym", "fitness", "yoga", "pilates", "crossfit", "personal training", "trainer", "workout", "exercise", "martial arts", "dance", "studio"],
+    "top_leak_patterns": [
+      "No class schedule or online booking visible",
+      "No free trial or first-class-free offer",
+      "No member testimonials or transformation stories"
+    ],
+    "language_style": "energetic and community-focused — fitness studio owners think in memberships and retention, connect online presence to trial-to-member conversion",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Berkshires fitness studios compete for a health-conscious community that values local, boutique experiences — a strong online presence differentiates from chain gyms"
+  },
+  "lodging": {
+    "name": "Inn / B&B / Lodging",
+    "typical_monthly_revenue": 32000,
+    "typical_annual_revenue": 384000,
+    "keywords": ["inn", "bed and breakfast", "b&b", "hotel", "motel", "lodge", "cabin", "vacation rental", "airbnb", "lodging", "accommodation", "rooms", "reservations"],
+    "top_leak_patterns": [
+      "No direct booking engine — losing 15-20% commission to OTAs on every reservation",
+      "No visible room photos or virtual tour",
+      "No seasonal packages or special offers to drive direct bookings"
+    ],
+    "language_style": "hospitality-minded and revenue-focused — innkeepers understand RevPAR and occupancy rates, frame findings in terms of direct bookings vs OTA dependency",
+    "high_loss_multiplier": 0.09,
+    "medium_loss_multiplier": 0.045,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Berkshires lodging is highly seasonal with peak demand during fall foliage, Tanglewood season, and summer weekends — direct booking capability during these periods is the single highest-impact investment"
+  },
+  "default": {
+    "name": "Local Business",
+    "typical_monthly_revenue": 30000,
+    "typical_annual_revenue": 360000,
+    "keywords": [],
+    "top_leak_patterns": [
+      "No clear call-to-action telling visitors what to do next",
+      "No visible contact information above the fold",
+      "No social proof or customer testimonials"
+    ],
+    "language_style": "clear and business-focused — speak in terms of customers gained and revenue earned, not marketing jargon",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Western MA small businesses rely on a mix of loyal locals and seasonal visitors — a strong online presence serves both audiences year-round"
+  }
+}

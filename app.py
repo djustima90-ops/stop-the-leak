@@ -7,6 +7,7 @@ from flask import Flask, render_template, request
 
 from tools.scrape_site import scrape_site
 from tools.extract_content import extract_content
+from tools.detect_industry import detect_industry
 from tools.call_claude import call_claude
 from tools.generate_report import generate_report
 from tools.save_output import save_output
@@ -30,10 +31,11 @@ def audit():
 
     html = scrape_site(url)
     content = extract_content(html, url)
-    analysis = call_claude(content)
+    industry = detect_industry(content)
+    analysis = call_claude(content, industry)
 
     timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
-    report_html = generate_report(analysis, business_name, url, timestamp)
+    report_html = generate_report(analysis, business_name, url, timestamp, industry)
     save_output(report_html, business_name)
 
     return report_html

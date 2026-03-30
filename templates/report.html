@@ -18,6 +18,10 @@
       background: linear-gradient(135deg, #0f1729 0%, #162033 100%);
       border-bottom: 2px solid #dc2626;
       padding: 2rem 2.5rem 1.8rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: padding 0.3s ease, box-shadow 0.3s ease;
     }
     .header-inner {
       max-width: 960px;
@@ -74,10 +78,11 @@
       position: relative;
       width: 110px;
       height: 110px;
+      transition: width 0.3s ease, height 0.3s ease;
     }
     .score-ring svg {
-      width: 110px;
-      height: 110px;
+      width: 100%;
+      height: 100%;
       transform: rotate(-90deg);
     }
     .score-ring circle {
@@ -143,6 +148,7 @@
       padding: 1.8rem 2rem;
       margin-bottom: 2rem;
       text-align: center;
+      transition: background 0.8s ease, border-color 0.8s ease;
     }
     .revenue-banner .banner-title {
       font-size: 0.78rem;
@@ -155,6 +161,7 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      transition: color 0.8s ease;
     }
     .revenue-banner .banner-title .pulse-dot {
       width: 8px;
@@ -171,18 +178,31 @@
       font-size: 1.1rem;
       color: #fca5a5;
       margin-bottom: 0.3rem;
+      transition: color 0.8s ease;
     }
     .revenue-banner .annual-loss {
       font-size: 2.8rem;
       font-weight: 900;
       color: #ef4444;
       line-height: 1.1;
+      transition: color 0.8s ease;
     }
     .revenue-banner .annual-label {
       font-size: 0.88rem;
       color: #f87171;
       margin-top: 0.2rem;
+      transition: color 0.8s ease;
     }
+
+    /* Banner — All Fixed State */
+    .revenue-banner.all-fixed {
+      background: linear-gradient(135deg, #052e16 0%, #0a3d1f 100%);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+    .revenue-banner.all-fixed .banner-title { color: #22c55e; }
+    .revenue-banner.all-fixed .monthly-loss { color: #86efac; }
+    .revenue-banner.all-fixed .annual-loss { color: #4ade80; }
+    .revenue-banner.all-fixed .annual-label { color: #22c55e; }
 
     /* Layout */
     .content { max-width: 960px; margin: 0 auto; padding: 2rem 2.5rem; }
@@ -324,13 +344,9 @@
       border-radius: 10px;
       padding: 1.3rem 1.5rem;
       margin-bottom: 0.7rem;
-      transition: border-color 0.15s, opacity 0.3s, border-left-color 0.3s;
+      transition: border-color 0.15s, border-left-color 0.3s;
     }
     .finding:hover { border-color: #334155; }
-    .finding.fixed {
-      border-left-color: #22c55e;
-      opacity: 0.65;
-    }
     .finding-header {
       display: flex;
       justify-content: space-between;
@@ -376,28 +392,6 @@
       margin-top: 0.35rem;
     }
     .finding-row strong { color: #cbd5e1; }
-
-    /* Fix checkbox */
-    .fix-check-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.7rem;
-      padding-top: 0.6rem;
-      border-top: 1px solid #1e293b;
-    }
-    .fix-check-row input[type="checkbox"] {
-      accent-color: #22c55e;
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-    .fix-check-row label {
-      font-size: 0.8rem;
-      color: #64748b;
-      cursor: pointer;
-      font-weight: 500;
-    }
 
     /* Priority Fixes */
     .priorities {
@@ -450,6 +444,27 @@
       padding-top: 0.3rem;
     }
 
+    /* Pipe Question Callout */
+    .pipe-question {
+      background: linear-gradient(135deg, #1a1608 0%, #141108 100%);
+      border: 1px solid rgba(217, 119, 6, 0.2);
+      border-left: 4px solid #d97706;
+      border-radius: 14px;
+      padding: 1.8rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .pipe-question h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-bottom: 0.6rem;
+    }
+    .pipe-question p {
+      font-size: 1.02rem;
+      color: #d4a94b;
+      line-height: 1.65;
+    }
+
     /* Action Report */
     .action-report {
       background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
@@ -489,29 +504,83 @@
     .action-severity-label.high { color: #fca5a5; }
     .action-severity-label.medium { color: #fde68a; }
     .action-severity-label.low { color: #86efac; }
-    .action-item {
+
+    /* Action Check Item */
+    .action-check-item {
       display: flex;
       align-items: flex-start;
       gap: 0.8rem;
-      padding: 0.7rem 0;
+      padding: 1rem 0;
       border-bottom: 1px solid #1e293b;
-      font-size: 0.95rem;
-      color: #cbd5e1;
+      transition: opacity 0.3s;
     }
-    .action-item:last-child { border-bottom: none; }
-    .action-bullet {
-      min-width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      margin-top: 0.55rem;
+    .action-check-item:last-child { border-bottom: none; }
+    .action-check-item.checked {
+      opacity: 0.5;
     }
-    .action-bullet.high { background: #ef4444; }
-    .action-bullet.medium { background: #f59e0b; }
-    .action-bullet.low { background: #22c55e; }
-    .action-finding-name {
-      color: #64748b;
-      font-size: 0.78rem;
+    .action-check-item input[type="checkbox"] {
+      accent-color: #22c55e;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
       margin-top: 0.2rem;
+      flex-shrink: 0;
+    }
+    .action-check-content {
+      flex: 1;
+    }
+    .action-check-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      cursor: pointer;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    .action-check-fix {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+    .action-check-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .action-recovery {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #22c55e;
+    }
+
+    /* Action Tags */
+    .action-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .tag-speed {
+      background: rgba(217, 119, 6, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(217, 119, 6, 0.3);
+    }
+    .tag-followup {
+      background: rgba(147, 51, 234, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(147, 51, 234, 0.3);
+    }
+    .tag-database {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
     /* Footer */
@@ -559,7 +628,57 @@
       .header { padding: 1.5rem; }
       .filter-bar { flex-direction: column; }
       .revenue-banner .annual-loss { font-size: 2rem; }
+      .header-compact { padding: 0.6rem 1.5rem; }
+      .header-compact .score-ring { width: 50px; height: 50px; }
+      .header-compact .grade-letter { font-size: 1.4rem; }
     }
+    /* Sticky Header Compact Mode */
+    .header-compact {
+      padding: 0.7rem 2.5rem;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+    }
+    .header-compact .brand-tag { display: none; }
+    .header-compact h1 { font-size: 1.15rem; }
+    .header-compact .meta { font-size: 0.75rem; margin-top: 0.15rem; }
+    .header-compact .score-ring { width: 64px; height: 64px; }
+    .header-compact .grade-letter { font-size: 1.8rem; }
+    .header-compact .grade-subtitle { display: none; }
+    .header-compact .savings-amount { font-size: 1.3rem; }
+    .header-compact .savings-label { font-size: 0.55rem; }
+    .header-compact .score-label { font-size: 0.6rem; margin-top: 0.15rem; }
+
+    /* Letter Grade */
+    .grade-letter {
+      font-size: 2.8rem;
+      font-weight: 900;
+      line-height: 1;
+      transition: color 0.5s ease, transform 0.3s ease;
+    }
+    .grade-subtitle {
+      font-size: 0.62rem;
+      color: #64748b;
+      text-align: center;
+      margin-top: 0.15rem;
+      font-weight: 600;
+      transition: opacity 0.3s;
+    }
+    .grade-celebrate {
+      display: none;
+      font-size: 0.9rem;
+      position: absolute;
+      top: 4px;
+      right: 4px;
+    }
+    @keyframes gradePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+    .grade-pulse { animation: gradePulse 1.5s ease-in-out infinite; }
+    @keyframes gradeGlow {
+      0%, 100% { filter: drop-shadow(0 0 4px currentColor); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 10px currentColor); transform: scale(1.05); }
+    }
+    .grade-glow { animation: gradeGlow 2s ease-in-out infinite; }
   </style>
 </head>
 <body>
@@ -576,10 +695,10 @@
       </div>
       <div class="header-right">
         <div class="savings-wrap">
-          <div class="savings-amount" id="savings-counter">$0</div>
+          <div class="savings-amount" id="savings-counter" data-current="0">$0</div>
           <div class="savings-label">Monthly Revenue<br>Recovered</div>
         </div>
-        <div class="score-wrap">
+        <div class="score-wrap" id="grade-wrap">
           {% set high_count = [] %}
           {% set med_count = [] %}
           {% set low_count = [] %}
@@ -588,22 +707,35 @@
             {% elif item.severity | lower == 'medium' %}{% if med_count.append(1) %}{% endif %}
             {% elif item.severity | lower == 'low' %}{% if low_count.append(1) %}{% endif %}{% endif %}
           {% endfor %}
-          {% set raw_score = (high_count | length * 15) + (med_count | length * 8) + (low_count | length * 3) %}
-          {% set score = [0, [100, raw_score] | min] | max %}
+          {% set total_findings = high_count | length + med_count | length + low_count | length %}
+          {% set num_high = high_count | length %}
+          {% if total_findings >= 13 or num_high >= 5 %}
+            {% set grade = 'F' %}{% set gcolor = '#ef4444' %}{% set goffset = 0 %}
+          {% elif total_findings >= 9 or num_high >= 3 %}
+            {% set grade = 'D' %}{% set gcolor = '#f97316' %}{% set goffset = 72 %}
+          {% elif total_findings >= 6 or num_high >= 2 %}
+            {% set grade = 'C' %}{% set gcolor = '#eab308' %}{% set goffset = 144 %}
+          {% elif total_findings >= 3 or num_high >= 1 %}
+            {% set grade = 'B' %}{% set gcolor = '#84cc16' %}{% set goffset = 217 %}
+          {% else %}
+            {% set grade = 'A' %}{% set gcolor = '#22c55e' %}{% set goffset = 275 %}
+          {% endif %}
           <div class="score-ring">
             <svg viewBox="0 0 110 110">
               <circle class="ring-bg" cx="55" cy="55" r="46" />
               <circle class="ring-fg" cx="55" cy="55" r="46"
-                stroke="{% if score >= 60 %}#ef4444{% elif score >= 30 %}#f59e0b{% else %}#22c55e{% endif %}"
+                stroke="{{ gcolor }}"
                 stroke-dasharray="289"
-                stroke-dashoffset="{{ 289 - (289 * score / 100) }}"
-                data-target="{{ 289 - (289 * score / 100) }}" />
+                stroke-dashoffset="{{ goffset }}"
+                data-target="{{ goffset }}" />
             </svg>
-            <div class="score-value" style="color: {% if score >= 60 %}#ef4444{% elif score >= 30 %}#f59e0b{% else %}#22c55e{% endif %}">
-              <span data-count="{{ score }}">0</span>
+            <div class="score-value">
+              <span class="grade-letter{% if grade == 'F' %} grade-pulse{% endif %}" id="grade-letter" style="color: {{ gcolor }}">{{ grade }}</span>
+              <span class="grade-celebrate" id="grade-celebrate">&#x1F389;</span>
             </div>
           </div>
-          <div class="score-label">Leak Score</div>
+          <div class="score-label">Website Grade</div>
+          <div class="grade-subtitle" id="grade-subtitle">Based on {{ total_findings }} finding{{ 's' if total_findings != 1 else '' }}</div>
         </div>
       </div>
     </div>
@@ -613,11 +745,11 @@
     <a class="back-link" href="/">&larr; Run another audit</a>
 
     <!-- Revenue Leaking Banner -->
-    <div class="revenue-banner">
-      <div class="banner-title"><div class="pulse-dot"></div> REVENUE LEAKING <div class="pulse-dot"></div></div>
-      <div class="monthly-loss">This website is leaking an estimated <strong>${{ total_monthly_loss | default(0) }}</strong>/month</div>
+    <div class="revenue-banner" id="revenue-banner">
+      <div class="banner-title" id="banner-title"><div class="pulse-dot"></div> REVENUE LEAKING <div class="pulse-dot"></div></div>
+      <div class="monthly-loss" id="monthly-loss-line">This website is leaking an estimated <strong id="monthly-loss-amount">${{ total_monthly_loss | default(0) }}</strong>/month</div>
       <div class="annual-loss" id="annual-loss-counter">$0</div>
-      <div class="annual-label">per year walking out the door</div>
+      <div class="annual-label" id="annual-label">per year walking out the door</div>
     </div>
 
     <!-- Executive Summary -->
@@ -669,25 +801,21 @@
         Lead Leaks
       </h2>
       {% for item in lead_leaks %}
-      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}" data-id="lead-{{ loop.index0 }}">
+      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
           <span class="finding-text">{{ item.finding }}</span>
           <div class="finding-badges">
-            {% if item.monthly_loss | default(0) > 0 %}
-            <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
-            {% endif %}
             {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
               <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+              {% if item.monthly_loss | default(0) > 0 %}
+              <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+              {% endif %}
             {% else %}
               <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
             {% endif %}
           </div>
         </div>
         <div class="finding-row"><strong>Impact:</strong> {{ item.impact }}</div>
-        <div class="fix-check-row">
-          <input type="checkbox" id="fix-lead-{{ loop.index0 }}" class="fix-checkbox" data-loss="{{ item.monthly_loss | default(0) }}" data-id="lead-{{ loop.index0 }}">
-          <label for="fix-lead-{{ loop.index0 }}">Mark as Fixed</label>
-        </div>
       </div>
       {% endfor %}
     </div>
@@ -699,25 +827,21 @@
         Conversion Leaks
       </h2>
       {% for item in conversion_leaks %}
-      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}" data-id="conv-{{ loop.index0 }}">
+      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
           <span class="finding-text">{{ item.finding }}</span>
           <div class="finding-badges">
-            {% if item.monthly_loss | default(0) > 0 %}
-            <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
-            {% endif %}
             {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
               <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+              {% if item.monthly_loss | default(0) > 0 %}
+              <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+              {% endif %}
             {% else %}
               <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
             {% endif %}
           </div>
         </div>
         <div class="finding-row"><strong>Impact:</strong> {{ item.impact }}</div>
-        <div class="fix-check-row">
-          <input type="checkbox" id="fix-conv-{{ loop.index0 }}" class="fix-checkbox" data-loss="{{ item.monthly_loss | default(0) }}" data-id="conv-{{ loop.index0 }}">
-          <label for="fix-conv-{{ loop.index0 }}">Mark as Fixed</label>
-        </div>
       </div>
       {% endfor %}
     </div>
@@ -729,25 +853,21 @@
         Follow-Up Leaks
       </h2>
       {% for item in follow_up_leaks %}
-      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}" data-id="fup-{{ loop.index0 }}">
+      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
           <span class="finding-text">{{ item.finding }}</span>
           <div class="finding-badges">
-            {% if item.monthly_loss | default(0) > 0 %}
-            <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
-            {% endif %}
             {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
               <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+              {% if item.monthly_loss | default(0) > 0 %}
+              <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+              {% endif %}
             {% else %}
               <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
             {% endif %}
           </div>
         </div>
         <div class="finding-row"><strong>Impact:</strong> {{ item.impact }}</div>
-        <div class="fix-check-row">
-          <input type="checkbox" id="fix-fup-{{ loop.index0 }}" class="fix-checkbox" data-loss="{{ item.monthly_loss | default(0) }}" data-id="fup-{{ loop.index0 }}">
-          <label for="fix-fup-{{ loop.index0 }}">Mark as Fixed</label>
-        </div>
       </div>
       {% endfor %}
     </div>
@@ -764,72 +884,118 @@
       {% endfor %}
     </div>
 
-    <!-- Action Report — Consolidated Fix List -->
-    <div class="action-report">
-      <h2>Action Report — Your Complete Fix List</h2>
-      <p class="action-sub">Every fix from this audit, organized by severity</p>
+    <!-- The Real Question Callout -->
+    <div class="pipe-question">
+      <h3>The Real Question</h3>
+      <p>If 500 new customers showed up at your business tomorrow, what would break first? Your action plan below is the answer &mdash; fix these in order and watch the number above drop to zero.</p>
+    </div>
 
-      {# Collect all findings with fixes into severity groups #}
-      {% set all_findings = [] %}
+    <!-- Action Report — Prescription Center -->
+    <div class="action-report">
+      <h2>Action Report &mdash; Your Complete Fix List</h2>
+      <p class="action-sub">Check off each fix to watch your revenue leak shrink in real time</p>
+
+      {# Collect all findings with fixes, losses, and tags #}
+      {% set all_actions = [] %}
       {% for item in lead_leaks %}
         {% if item.fix and item.severity | lower in ['high', 'medium', 'low'] %}
-          {% if all_findings.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Lead Leak'}) %}{% endif %}
+          {% set fl = item.finding | lower %}
+          {% set tag = 'speed-to-lead' if ('phone' in fl or 'contact form' in fl or 'live chat' in fl or 'chat widget' in fl or 'email address' in fl or 'response' in fl) else '' %}
+          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Lead Leak', 'monthly_loss': item.monthly_loss | default(0), 'id': 'lead-' ~ loop.index0, 'tag': tag}) %}{% endif %}
         {% endif %}
       {% endfor %}
       {% for item in conversion_leaks %}
         {% if item.fix and item.severity | lower in ['high', 'medium', 'low'] %}
-          {% if all_findings.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Conversion Leak'}) %}{% endif %}
+          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Conversion Leak', 'monthly_loss': item.monthly_loss | default(0), 'id': 'conv-' ~ loop.index0, 'tag': ''}) %}{% endif %}
         {% endif %}
       {% endfor %}
       {% for item in follow_up_leaks %}
         {% if item.fix and item.severity | lower in ['high', 'medium', 'low'] %}
-          {% if all_findings.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Follow-Up Leak'}) %}{% endif %}
+          {% set fl = item.finding | lower %}
+          {% set tag = 'follow-up-leak' if ('email' in fl or 'newsletter' in fl or 'lead magnet' in fl or 'follow' in fl or 'capture' in fl) else ('database-leak' if ('social' in fl or 'blog' in fl or 'repeat' in fl) else '') %}
+          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Follow-Up Leak', 'monthly_loss': item.monthly_loss | default(0), 'id': 'fup-' ~ loop.index0, 'tag': tag}) %}{% endif %}
         {% endif %}
       {% endfor %}
 
-      {% set high_fixes = all_findings | selectattr('severity', 'equalto', 'high') | list %}
-      {% set medium_fixes = all_findings | selectattr('severity', 'equalto', 'medium') | list %}
-      {% set low_fixes = all_findings | selectattr('severity', 'equalto', 'low') | list %}
+      {% set high_actions = all_actions | selectattr('severity', 'equalto', 'high') | list %}
+      {% set medium_actions = all_actions | selectattr('severity', 'equalto', 'medium') | list %}
+      {% set low_actions = all_actions | selectattr('severity', 'equalto', 'low') | list %}
 
-      {% if high_fixes %}
+      {% if high_actions %}
       <div class="action-severity-group">
-        <div class="action-severity-label high"><span class="action-bullet high" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> High Severity</div>
-        {% for item in high_fixes %}
-        <div class="action-item">
-          <div class="action-bullet high"></div>
-          <div>
-            {{ item.fix }}
-            <div class="action-finding-name">{{ item.category }}: {{ item.finding }}</div>
+        <div class="action-severity-label high"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> High Severity</div>
+        {% for item in high_actions %}
+        <div class="action-check-item" data-id="{{ item.id }}">
+          <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
+          <div class="action-check-content">
+            <label for="action-{{ item.id }}" class="action-check-title">{{ item.finding }}</label>
+            <div class="action-check-fix">{{ item.fix }}</div>
+            <div class="action-check-meta">
+              {% if item.monthly_loss > 0 %}
+              <span class="action-recovery">+${{ item.monthly_loss }}/mo</span>
+              {% endif %}
+              {% if item.tag == 'speed-to-lead' %}
+              <span class="action-tag tag-speed">&#9889; Speed to Lead</span>
+              {% elif item.tag == 'follow-up-leak' %}
+              <span class="action-tag tag-followup">&#x1F504; Follow-Up Leak</span>
+              {% elif item.tag == 'database-leak' %}
+              <span class="action-tag tag-database">&#x1F4B0; Database Leak</span>
+              {% endif %}
+            </div>
           </div>
         </div>
         {% endfor %}
       </div>
       {% endif %}
 
-      {% if medium_fixes %}
+      {% if medium_actions %}
       <div class="action-severity-group">
-        <div class="action-severity-label medium"><span class="action-bullet medium" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Medium Severity</div>
-        {% for item in medium_fixes %}
-        <div class="action-item">
-          <div class="action-bullet medium"></div>
-          <div>
-            {{ item.fix }}
-            <div class="action-finding-name">{{ item.category }}: {{ item.finding }}</div>
+        <div class="action-severity-label medium"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Medium Severity</div>
+        {% for item in medium_actions %}
+        <div class="action-check-item" data-id="{{ item.id }}">
+          <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
+          <div class="action-check-content">
+            <label for="action-{{ item.id }}" class="action-check-title">{{ item.finding }}</label>
+            <div class="action-check-fix">{{ item.fix }}</div>
+            <div class="action-check-meta">
+              {% if item.monthly_loss > 0 %}
+              <span class="action-recovery">+${{ item.monthly_loss }}/mo</span>
+              {% endif %}
+              {% if item.tag == 'speed-to-lead' %}
+              <span class="action-tag tag-speed">&#9889; Speed to Lead</span>
+              {% elif item.tag == 'follow-up-leak' %}
+              <span class="action-tag tag-followup">&#x1F504; Follow-Up Leak</span>
+              {% elif item.tag == 'database-leak' %}
+              <span class="action-tag tag-database">&#x1F4B0; Database Leak</span>
+              {% endif %}
+            </div>
           </div>
         </div>
         {% endfor %}
       </div>
       {% endif %}
 
-      {% if low_fixes %}
+      {% if low_actions %}
       <div class="action-severity-group">
-        <div class="action-severity-label low"><span class="action-bullet low" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span> Low Severity</div>
-        {% for item in low_fixes %}
-        <div class="action-item">
-          <div class="action-bullet low"></div>
-          <div>
-            {{ item.fix }}
-            <div class="action-finding-name">{{ item.category }}: {{ item.finding }}</div>
+        <div class="action-severity-label low"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span> Low Severity</div>
+        {% for item in low_actions %}
+        <div class="action-check-item" data-id="{{ item.id }}">
+          <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
+          <div class="action-check-content">
+            <label for="action-{{ item.id }}" class="action-check-title">{{ item.finding }}</label>
+            <div class="action-check-fix">{{ item.fix }}</div>
+            <div class="action-check-meta">
+              {% if item.monthly_loss > 0 %}
+              <span class="action-recovery">+${{ item.monthly_loss }}/mo</span>
+              {% endif %}
+              {% if item.tag == 'speed-to-lead' %}
+              <span class="action-tag tag-speed">&#9889; Speed to Lead</span>
+              {% elif item.tag == 'follow-up-leak' %}
+              <span class="action-tag tag-followup">&#x1F504; Follow-Up Leak</span>
+              {% elif item.tag == 'database-leak' %}
+              <span class="action-tag tag-database">&#x1F4B0; Database Leak</span>
+              {% endif %}
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -868,26 +1034,68 @@
       });
     }
 
-    var chaChing = new Audio('/static/cha-ching.mp3');
-    chaChing.volume = 0.7;
+    function playCashRegisterWebAudio() {
+      var ctx = getAudioCtx();
+      var t = ctx.currentTime;
+      [800, 1200, 1600].forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(freq, t + i * 0.08);
+        gain.gain.setValueAtTime(0.12, t + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + i * 0.08);
+        osc.stop(t + i * 0.08 + 0.12);
+      });
+      var bell = ctx.createOscillator();
+      var bellGain = ctx.createGain();
+      bell.type = 'sine';
+      bell.frequency.setValueAtTime(2000, t + 0.25);
+      bellGain.gain.setValueAtTime(0.15, t + 0.25);
+      bellGain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+      bell.connect(bellGain);
+      bellGain.connect(ctx.destination);
+      bell.start(t + 0.25);
+      bell.stop(t + 0.75);
+    }
 
     function playCashRegister() {
-      chaChing.currentTime = 0;
-      chaChing.play();
-    }
-
-    // Play drip on load (after user interaction to satisfy autoplay policy)
-    var dripPlayed = false;
-    function tryPlayDrip() {
-      if (!dripPlayed) {
-        dripPlayed = true;
-        playDrip();
+      try {
+        var sound = new Audio('/static/cha-ching.mp3');
+        sound.volume = 0.7;
+        var playPromise = sound.play();
+        if (playPromise !== undefined) {
+          playPromise.then(function() {}).catch(function() {
+            playCashRegisterWebAudio();
+          });
+        }
+      } catch (e) {
+        playCashRegisterWebAudio();
       }
     }
-    // Try on first interaction, or after a small delay
+
+    // Play drip on load
+    var dripPlayed = false;
+    function tryPlayDrip() {
+      if (!dripPlayed) { dripPlayed = true; playDrip(); }
+    }
     document.addEventListener('click', tryPlayDrip, { once: true });
     document.addEventListener('scroll', tryPlayDrip, { once: true });
     document.addEventListener('mousemove', tryPlayDrip, { once: true });
+
+    // ==================== Sticky Header ====================
+    (function() {
+      var header = document.querySelector('.header');
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 20) {
+          header.classList.add('header-compact');
+        } else {
+          header.classList.remove('header-compact');
+        }
+      }, { passive: true });
+    })();
 
     // ==================== Animate Numbers ====================
     document.querySelectorAll('[data-count]').forEach(function(el) {
@@ -909,36 +1117,161 @@
     document.querySelectorAll('.ring-fg').forEach(function(circle) {
       var target = parseFloat(circle.getAttribute('data-target'));
       circle.style.strokeDashoffset = '289';
-      setTimeout(function() {
-        circle.style.strokeDashoffset = target;
-      }, 200);
+      setTimeout(function() { circle.style.strokeDashoffset = target; }, 200);
     });
 
-    // ==================== Annual Loss Counter Animation ====================
-    (function() {
-      var totalMonthly = {{ total_monthly_loss | default(0) }};
-      var totalAnnual = totalMonthly * 12;
-      var el = document.getElementById('annual-loss-counter');
-      if (totalAnnual === 0) { el.textContent = '$0'; return; }
-      var duration = 2000;
-      var start = null;
+    // ==================== Smooth Number Animator ====================
+    function animateNumber(element, from, to, duration, formatter) {
+      var startTime = null;
       function step(ts) {
-        if (!start) start = ts;
-        var progress = Math.min((ts - start) / duration, 1);
+        if (!startTime) startTime = ts;
+        var progress = Math.min((ts - startTime) / duration, 1);
         var eased = 1 - Math.pow(1 - progress, 3);
-        var current = Math.round(eased * totalAnnual);
-        el.textContent = '$' + current.toLocaleString();
+        var current = Math.round(from + (to - from) * eased);
+        element.textContent = formatter(current);
         if (progress < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
+    }
+
+    function formatDollar(n) { return '$' + n.toLocaleString(); }
+
+    // ==================== Revenue Banner + Savings State ====================
+    var totalMonthlyLoss = {{ total_monthly_loss | default(0) }};
+    var currentLeaking = totalMonthlyLoss;
+    var currentSavings = 0;
+    var storageKey = 'stl-actions-' + '{{ url | replace("'", "\\'") }}';
+
+    // Initial annual loss animation
+    (function() {
+      var totalAnnual = totalMonthlyLoss * 12;
+      var el = document.getElementById('annual-loss-counter');
+      if (totalAnnual === 0) { el.textContent = '$0'; return; }
+      animateNumber(el, 0, totalAnnual, 2000, formatDollar);
     })();
+
+    function updateBanner() {
+      var banner = document.getElementById('revenue-banner');
+      var monthlyEl = document.getElementById('monthly-loss-amount');
+      var annualEl = document.getElementById('annual-loss-counter');
+      var monthlyLine = document.getElementById('monthly-loss-line');
+      var bannerTitle = document.getElementById('banner-title');
+      var annualLabel = document.getElementById('annual-label');
+
+      var oldLeaking = parseInt(monthlyEl.getAttribute('data-current') || totalMonthlyLoss);
+      monthlyEl.setAttribute('data-current', currentLeaking);
+
+      // Animate monthly amount
+      monthlyEl.textContent = '$' + currentLeaking.toLocaleString();
+
+      // Animate annual loss counting down
+      animateNumber(annualEl, oldLeaking * 12, currentLeaking * 12, 600, formatDollar);
+
+      // Check if all fixed
+      var allBoxes = document.querySelectorAll('.action-checkbox');
+      var allChecked = allBoxes.length > 0;
+      allBoxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+
+      if (allChecked) {
+        banner.classList.add('all-fixed');
+        bannerTitle.innerHTML = '&#x2713; ALL LEAKS FIXED';
+        monthlyLine.innerHTML = 'You recovered <strong>$' + totalMonthlyLoss.toLocaleString() + '</strong>/month &mdash; <strong>$' + (totalMonthlyLoss * 12).toLocaleString() + '</strong>/year';
+        annualEl.style.display = 'none';
+        annualLabel.textContent = '';
+        // Big celebration
+        setTimeout(function() {
+          launchConfetti(window.innerWidth / 2, window.innerHeight / 3);
+          setTimeout(function() {
+            launchConfetti(window.innerWidth / 3, window.innerHeight / 3);
+            launchConfetti(window.innerWidth * 2 / 3, window.innerHeight / 3);
+          }, 300);
+        }, 600);
+      } else {
+        banner.classList.remove('all-fixed');
+        bannerTitle.innerHTML = '<div class="pulse-dot"></div> REVENUE LEAKING <div class="pulse-dot"></div>';
+        monthlyLine.innerHTML = 'This website is leaking an estimated <strong id="monthly-loss-amount" data-current="' + currentLeaking + '">$' + currentLeaking.toLocaleString() + '</strong>/month';
+        annualEl.style.display = '';
+        annualLabel.textContent = 'per year walking out the door';
+      }
+    }
+
+    function updateSavingsDisplay(animate) {
+      var el = document.getElementById('savings-counter');
+      var old = parseInt(el.getAttribute('data-current') || 0);
+      el.setAttribute('data-current', currentSavings);
+      animateNumber(el, old, currentSavings, 600, formatDollar);
+      if (animate) {
+        el.classList.add('bumped');
+        setTimeout(function() { el.classList.remove('bumped'); }, 300);
+      }
+    }
+
+    // ==================== Grade System ====================
+    var gradeConfig = {
+      A: { color: '#22c55e', offset: 275 },
+      B: { color: '#84cc16', offset: 217 },
+      C: { color: '#eab308', offset: 144 },
+      D: { color: '#f97316', offset: 72 },
+      F: { color: '#ef4444', offset: 0 }
+    };
+
+    function calculateGrade() {
+      var total = 0, high = 0;
+      document.querySelectorAll('.action-checkbox').forEach(function(cb) {
+        if (!cb.checked) {
+          total++;
+          if (cb.getAttribute('data-severity') === 'high') high++;
+        }
+      });
+      if (total === 0) return { grade: 'A', total: 0 };
+      if (total >= 13 || high >= 5) return { grade: 'F', total: total };
+      if (total >= 9 || high >= 3) return { grade: 'D', total: total };
+      if (total >= 6 || high >= 2) return { grade: 'C', total: total };
+      if (total >= 3 || high >= 1) return { grade: 'B', total: total };
+      return { grade: 'A', total: total };
+    }
+
+    function updateGrade() {
+      var result = calculateGrade();
+      var g = result.grade;
+      var cfg = gradeConfig[g];
+      var letterEl = document.getElementById('grade-letter');
+      var ringEl = document.querySelector('.ring-fg');
+      var subtitleEl = document.getElementById('grade-subtitle');
+      var celebrateEl = document.getElementById('grade-celebrate');
+
+      letterEl.textContent = g;
+      letterEl.style.color = cfg.color;
+      ringEl.style.stroke = cfg.color;
+      ringEl.style.strokeDashoffset = cfg.offset;
+      subtitleEl.textContent = 'Based on ' + result.total + ' finding' + (result.total !== 1 ? 's' : '');
+
+      if (g === 'F') {
+        letterEl.classList.add('grade-pulse');
+      } else {
+        letterEl.classList.remove('grade-pulse');
+      }
+
+      // All fixed → A with glow + celebration
+      var allBoxes = document.querySelectorAll('.action-checkbox');
+      var allChecked = allBoxes.length > 0;
+      allBoxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+
+      if (allChecked && allBoxes.length > 0) {
+        letterEl.classList.add('grade-glow');
+        celebrateEl.style.display = 'inline';
+        subtitleEl.textContent = 'All leaks fixed!';
+      } else {
+        letterEl.classList.remove('grade-glow');
+        celebrateEl.style.display = 'none';
+      }
+    }
 
     // ==================== Filters ====================
     var activeCategoryFilter = 'all';
     var activeSeverityFilter = 'all';
 
     function applyFilters() {
-      // Show/hide sections by category
       document.querySelectorAll('.section[data-category]').forEach(function(section) {
         var cat = section.getAttribute('data-category');
         if (activeCategoryFilter === 'all' || cat === activeCategoryFilter) {
@@ -947,7 +1280,6 @@
           section.classList.add('section-hidden');
         }
       });
-      // Show/hide findings by severity
       document.querySelectorAll('.finding[data-severity]').forEach(function(card) {
         var sev = card.getAttribute('data-severity');
         if (activeSeverityFilter === 'all' || sev === activeSeverityFilter) {
@@ -976,46 +1308,7 @@
       });
     });
 
-    // ==================== Fix Checkboxes + Savings Counter ====================
-    var currentSavings = 0;
-    var storageKey = 'stl-fixed-' + '{{ url | replace("'", "\\'") }}';
-
-    function updateSavingsDisplay(animate) {
-      var el = document.getElementById('savings-counter');
-      el.textContent = '$' + currentSavings.toLocaleString();
-      if (animate) {
-        el.classList.add('bumped');
-        setTimeout(function() { el.classList.remove('bumped'); }, 300);
-      }
-    }
-
-    function loadFixedState() {
-      try {
-        var saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
-        document.querySelectorAll('.fix-checkbox').forEach(function(cb) {
-          var id = cb.getAttribute('data-id');
-          if (saved[id]) {
-            cb.checked = true;
-            var loss = parseInt(cb.getAttribute('data-loss'), 10) || 0;
-            currentSavings += loss;
-            cb.closest('.finding').classList.add('fixed');
-          }
-        });
-        updateSavingsDisplay(false);
-      } catch (e) {}
-    }
-
-    function saveFixedState() {
-      var state = {};
-      document.querySelectorAll('.fix-checkbox').forEach(function(cb) {
-        if (cb.checked) {
-          state[cb.getAttribute('data-id')] = true;
-        }
-      });
-      try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (e) {}
-    }
-
-    // ==================== Confetti + Floating Text Celebration ====================
+    // ==================== Confetti + Floating Text ====================
     function launchConfetti(originX, originY) {
       var canvas = document.createElement('canvas');
       canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
@@ -1026,19 +1319,16 @@
       var colors = ['#22c55e','#4ade80','#86efac','#fbbf24','#f59e0b','#fde68a'];
       var particles = [];
       for (var i = 0; i < 30; i++) {
-        var angle = (Math.random() * Math.PI * 0.8) + Math.PI * 0.6; // mostly upward
+        var angle = (Math.random() * Math.PI * 0.8) + Math.PI * 0.6;
         var speed = 200 + Math.random() * 300;
         particles.push({
-          x: originX,
-          y: originY,
+          x: originX, y: originY,
           vx: Math.cos(angle) * speed * (Math.random() * 0.6 + 0.7),
           vy: Math.sin(angle) * speed * (Math.random() * 0.6 + 0.7),
-          w: 4 + Math.random() * 6,
-          h: 3 + Math.random() * 4,
+          w: 4 + Math.random() * 6, h: 3 + Math.random() * 4,
           color: colors[Math.floor(Math.random() * colors.length)],
           rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 12,
-          life: 1
+          rotSpeed: (Math.random() - 0.5) * 12, life: 1
         });
       }
       var start = null;
@@ -1050,24 +1340,13 @@
         ctx2d.clearRect(0, 0, canvas.width, canvas.height);
         var dt = 1 / 60;
         particles.forEach(function(p) {
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.vy += 500 * dt; // gravity
-          p.rotation += p.rotSpeed * dt;
-          p.life = 1 - progress;
-          ctx2d.save();
-          ctx2d.translate(p.x, p.y);
-          ctx2d.rotate(p.rotation);
-          ctx2d.globalAlpha = p.life;
-          ctx2d.fillStyle = p.color;
-          ctx2d.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-          ctx2d.restore();
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          p.vy += 500 * dt; p.rotation += p.rotSpeed * dt; p.life = 1 - progress;
+          ctx2d.save(); ctx2d.translate(p.x, p.y); ctx2d.rotate(p.rotation);
+          ctx2d.globalAlpha = p.life; ctx2d.fillStyle = p.color;
+          ctx2d.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx2d.restore();
         });
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          document.body.removeChild(canvas);
-        }
+        if (progress < 1) { requestAnimationFrame(animate); } else { document.body.removeChild(canvas); }
       }
       requestAnimationFrame(animate);
     }
@@ -1088,45 +1367,67 @@
         var progress = Math.min(elapsed / duration, 1);
         el.style.top = (startY - 80 * progress) + 'px';
         el.style.opacity = (1 - progress).toString();
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          document.body.removeChild(el);
-        }
+        if (progress < 1) { requestAnimationFrame(animate); } else { document.body.removeChild(el); }
       }
       requestAnimationFrame(animate);
     }
 
-    function celebrateFix(checkbox) {
-      var rect = checkbox.getBoundingClientRect();
-      var cx = rect.left + rect.width / 2;
-      var cy = rect.top + rect.height / 2;
-      launchConfetti(cx, cy);
-      var loss = parseInt(checkbox.getAttribute('data-loss'), 10) || 0;
-      if (loss > 0) {
-        showFloatingSaved(cx + 15, cy - 10, loss);
-      }
+    // ==================== Action Report Checkboxes ====================
+    function loadActionState() {
+      try {
+        var saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        document.querySelectorAll('.action-checkbox').forEach(function(cb) {
+          var id = cb.getAttribute('data-id');
+          if (saved[id]) {
+            cb.checked = true;
+            var loss = parseInt(cb.getAttribute('data-loss'), 10) || 0;
+            currentSavings += loss;
+            currentLeaking -= loss;
+            cb.closest('.action-check-item').classList.add('checked');
+          }
+        });
+        updateSavingsDisplay(false);
+        if (currentSavings > 0) updateBanner();
+        updateGrade();
+      } catch (e) {}
     }
 
-    document.querySelectorAll('.fix-checkbox').forEach(function(cb) {
+    function saveActionState() {
+      var state = {};
+      document.querySelectorAll('.action-checkbox').forEach(function(cb) {
+        if (cb.checked) state[cb.getAttribute('data-id')] = true;
+      });
+      try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (e) {}
+    }
+
+    document.querySelectorAll('.action-checkbox').forEach(function(cb) {
       cb.addEventListener('change', function() {
         var loss = parseInt(cb.getAttribute('data-loss'), 10) || 0;
-        var card = cb.closest('.finding');
+        var item = cb.closest('.action-check-item');
         if (cb.checked) {
           currentSavings += loss;
-          card.classList.add('fixed');
+          currentLeaking -= loss;
+          item.classList.add('checked');
           playCashRegister();
-          celebrateFix(cb);
+          // Confetti + floating text
+          var rect = cb.getBoundingClientRect();
+          var cx = rect.left + rect.width / 2;
+          var cy = rect.top + rect.height / 2;
+          launchConfetti(cx, cy);
+          if (loss > 0) showFloatingSaved(cx + 15, cy - 10, loss);
         } else {
           currentSavings -= loss;
-          card.classList.remove('fixed');
+          currentLeaking += loss;
+          item.classList.remove('checked');
         }
         updateSavingsDisplay(cb.checked);
-        saveFixedState();
+        updateBanner();
+        updateGrade();
+        saveActionState();
       });
     });
 
-    loadFixedState();
+    loadActionState();
   </script>
 </body>
 </html>

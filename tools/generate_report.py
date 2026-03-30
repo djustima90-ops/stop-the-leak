@@ -89,7 +89,8 @@ def _parse_analysis(analysis: str) -> dict:
 
 
 def generate_report(
-    analysis: str, business_name: str, url: str, timestamp: str
+    analysis: str, business_name: str, url: str, timestamp: str,
+    industry=None,
 ) -> str:
     """Parse Claude's analysis and render the HTML report.
 
@@ -98,6 +99,7 @@ def generate_report(
         business_name: Name of the business being audited.
         url: URL that was audited.
         timestamp: Human-readable timestamp string.
+        industry: Optional dict of industry-specific data from detect_industry.
 
     Returns:
         Rendered HTML string.
@@ -111,5 +113,6 @@ def generate_report(
         business_name=business_name,
         url=url,
         timestamp=timestamp,
+        industry=industry or {},
         **parsed,
     )

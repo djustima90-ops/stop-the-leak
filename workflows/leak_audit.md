@@ -37,6 +37,24 @@ Analyze the following website content and evaluate every check listed below. Be 
 
 ---
 
+## MONTHLY LOSS ESTIMATION INSTRUCTIONS
+
+For EACH finding, you must also estimate how much revenue the business is losing per month because of that specific leak. Base your estimate on:
+- The type of business (inferred from the site content — e.g., plumber, dentist, restaurant, lawyer)
+- The severity of the finding (High = major revenue impact, Medium = moderate, Low = minor)
+- Realistic local business revenue assumptions (e.g., a local plumber might average $5,000-15,000/month in leads from their website; a dentist might average $10,000-30,000/month)
+- Be specific and defensible — explain your reasoning in terms of lost leads, missed conversions, or abandoned visitors
+
+General guidelines for estimation:
+- High severity findings for service businesses: $500-$3,000/month
+- Medium severity findings: $200-$1,000/month
+- Low severity findings: $50-$300/month
+- Adjust based on the specific business type and local market
+
+At the end, sum all individual MONTHLY_LOSS_ESTIMATE values to produce a TOTAL_MONTHLY_LOSS.
+
+---
+
 ## REQUIRED OUTPUT FORMAT
 
 You must return your analysis in exactly this format. Do not add any text before or after this format. Each category may have multiple findings — separate each finding block with a line containing only `---`.
@@ -50,6 +68,7 @@ FINDING: [specific finding]
 SEVERITY: [High/Medium/Low]
 IMPACT: [one sentence]
 FIX: [one sentence]
+MONTHLY_LOSS_ESTIMATE: $[amount]
 ---
 
 CONVERSION_LEAKS:
@@ -57,6 +76,7 @@ FINDING: [specific finding]
 SEVERITY: [High/Medium/Low]
 IMPACT: [one sentence]
 FIX: [one sentence]
+MONTHLY_LOSS_ESTIMATE: $[amount]
 ---
 
 FOLLOW_UP_LEAKS:
@@ -64,6 +84,7 @@ FINDING: [specific finding]
 SEVERITY: [High/Medium/Low]
 IMPACT: [one sentence]
 FIX: [one sentence]
+MONTHLY_LOSS_ESTIMATE: $[amount]
 ---
 
 PRIORITY_FIXES:
@@ -76,4 +97,6 @@ Lead Leaks: [number]
 Conversion Leaks: [number]
 Follow-Up Leaks: [number]
 Total: [number]
+
+TOTAL_MONTHLY_LOSS: $[sum of all monthly loss estimates]
 ```

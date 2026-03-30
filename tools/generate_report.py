@@ -12,7 +12,7 @@ def _parse_findings(section_text: str) -> list[dict]:
     """Parse a section's finding blocks separated by '---'.
 
     Returns:
-        List of dicts with keys: finding, severity, impact, fix.
+        List of dicts with keys: finding, severity, impact, fix, monthly_loss.
     """
     blocks = re.split(r"\n---\s*\n", section_text.strip())
     findings = []
@@ -21,6 +21,11 @@ def _parse_findings(section_text: str) -> list[dict]:
         for key in ("FINDING", "SEVERITY", "IMPACT", "FIX"):
             match = re.search(rf"{key}:\s*(.+)", block)
             finding[key.lower()] = match.group(1).strip() if match else ""
+        # Parse monthly loss estimate
+        loss_match = re.search(r"MONTHLY_LOSS_ESTIMATE:\s*\$?([\d,]+)", block)
+        finding["monthly_loss"] = (
+            int(loss_match.group(1).replace(",", "")) if loss_match else 0
+        )
         if finding["finding"]:
             findings.append(finding)
     return findings
@@ -31,7 +36,7 @@ def _parse_analysis(analysis: str) -> dict:
 
     Returns:
         Dict with keys: executive_summary, lead_leaks, conversion_leaks,
-        follow_up_leaks, priority_fixes, leak_count.
+        follow_up_leaks, priority_fixes, leak_count, total_monthly_loss.
     """
     result = {}
 
@@ -73,6 +78,12 @@ def _parse_analysis(analysis: str) -> dict:
     ]:
         match = re.search(rf"{label}:\s*(\d+)", analysis)
         result["leak_count"][key] = int(match.group(1)) if match else 0
+
+    # Total monthly loss
+    loss_match = re.search(r"TOTAL_MONTHLY_LOSS:\s*\$?([\d,]+)", analysis)
+    result["total_monthly_loss"] = (
+        int(loss_match.group(1).replace(",", "")) if loss_match else 0
+    )
 
     return result
 

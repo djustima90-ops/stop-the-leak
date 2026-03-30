@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git stash:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch .env' --prune-empty HEAD)",
+      "Bash(chmod:*)",
+      "Bash(lsof -ti:5001)",
+      "Bash(xargs kill:*)",
+      "Bash(python3 app.py)",
+      "Read(//Users/davidjustima/Downloads/**)",
+      "Read(//private/tmp/**)",
+      "Bash(ls ~/Downloads/modestas*)"
     ]
   }
 }

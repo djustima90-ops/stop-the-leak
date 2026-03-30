@@ -28,7 +28,7 @@ def call_claude(structured_content: dict) -> str:
     client = anthropic.Anthropic()
     message = client.messages.create(
         model="claude-sonnet-4-5-20250929",
-        max_tokens=4000,
+        max_tokens=5000,
         messages=[{"role": "user", "content": prompt}],
     )
     return message.content[0].text

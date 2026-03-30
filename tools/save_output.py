@@ -1,10 +1,15 @@
 """Save a rendered HTML report to the outputs directory."""
 
+import os
 import re
 from datetime import datetime
 from pathlib import Path
 
-OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs"
+# Use /tmp on Vercel (read-only filesystem), local outputs/ otherwise
+if os.environ.get("VERCEL"):
+    OUTPUTS_DIR = Path("/tmp/outputs")
+else:
+    OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs"
 
 
 def save_output(html: str, business_name: str) -> Path:

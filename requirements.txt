@@ -3,3 +3,4 @@ requests==2.32.3
 beautifulsoup4==4.13.3
 anthropic==0.49.0
 python-dotenv==1.1.0
+resend==2.26.0

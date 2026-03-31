@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stop the Leak — Is Your Website Leaking Leads?</title>
+  <title>Stop the Leak — Free Website Revenue Audit</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -93,7 +93,7 @@
       margin-bottom: 0.3rem;
       display: block;
     }
-    input {
+    input[type="text"], input[type="email"] {
       width: 100%;
       padding: 0.9rem 1.1rem;
       border: 1px solid #2d3a4f;
@@ -103,14 +103,14 @@
       font-size: 1.05rem;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    input:focus {
+    input[type="text"]:focus, input[type="email"]:focus {
       outline: none;
       border-color: #dc2626;
-      box-shadow: 0 0 0 3px rgba(220,38,38,0.15);
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.2);
     }
     input::placeholder { color: #3e4c63; }
     .optional { font-weight: 400; color: #4a5568; text-transform: none; letter-spacing: 0; }
-    button {
+    button[type="submit"] {
       margin-top: 0.5rem;
       padding: 1rem;
       background: #dc2626;
@@ -124,31 +124,22 @@
       letter-spacing: 0.02em;
       position: relative;
       overflow: hidden;
+      animation: btnPulse 2s ease-in-out infinite;
     }
-    button:hover {
-      background: #b91c1c;
+    @keyframes btnPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    button[type="submit"]:hover {
+      animation: none;
+      background: #ef4444;
+      color: #fff;
+      opacity: 1;
+      visibility: visible;
       transform: translateY(-1px);
       box-shadow: 0 8px 25px rgba(220,38,38,0.35);
     }
-    button:active { transform: translateY(0); }
-
-    /* Loading state */
-    button .btn-text { transition: opacity 0.2s; }
-    button.loading .btn-text { opacity: 0; visibility: hidden; }
-    button .spinner {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    button.loading .spinner { opacity: 1; }
-    .loading-text {
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
+    button[type="submit"]:active { transform: translateY(0); }
 
     /* Trust Signals */
     .trust {
@@ -205,14 +196,11 @@
     }
     .audit-card {
       background: linear-gradient(135deg, #111827 0%, #151e2e 100%);
-      border: 1px solid #1e293b;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-left: 3px solid #dc2626;
       border-radius: 14px;
       padding: 2rem 1.5rem;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .audit-card:hover {
-      border-color: #334155;
-      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(220,38,38,0.12);
     }
     .audit-card-icon {
       width: 44px;
@@ -250,6 +238,101 @@
     }
     .footer span { color: #475569; }
 
+    /* ==================== LOADING OVERLAY ==================== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #09101d;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .loading-url {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-bottom: 2.5rem;
+      font-weight: 600;
+    }
+    .loading-url strong {
+      color: #e2e8f0;
+    }
+
+    /* Dripping water drop SVG */
+    .loading-icon {
+      width: 60px;
+      height: 60px;
+      margin-bottom: 2rem;
+      animation: dropPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes dropPulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .loading-status {
+      margin-bottom: 2rem;
+      min-height: 4em;
+      text-align: center;
+      transition: opacity 0.5s;
+    }
+    .loading-status .fact-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #dc2626;
+      margin-bottom: 0.6rem;
+    }
+    .loading-status .fact-stat {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.4;
+      margin-bottom: 0.3rem;
+    }
+    .loading-status .fact-support {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: #94a3b8;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 1rem;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+      border-radius: 3px;
+      transition: width 0.5s ease-out;
+    }
+    .progress-percent {
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 0.6rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
     @media (max-width: 640px) {
       h1 { font-size: 2.2rem; }
       .subtitle { font-size: 1.05rem; }
@@ -262,7 +345,7 @@
 <body>
   <div class="bg-glow"></div>
 
-  <div class="hero">
+  <div class="hero" id="hero-section">
     <div class="brand">
       <div class="brand-dot"></div>
       Stop the Leak
@@ -274,18 +357,13 @@
       <form action="/audit" method="POST" id="audit-form">
         <div>
           <label for="url">Website URL</label>
-          <input type="url" id="url" name="url" placeholder="https://example.com" required>
+          <input type="text" id="url" name="url" placeholder="facebook.com, yoursite.com, or paste full URL" required>
         </div>
         <div>
           <label for="business_name">Business Name <span class="optional">(optional)</span></label>
           <input type="text" id="business_name" name="business_name" placeholder="Acme Plumbing">
         </div>
-        <button type="submit" id="submit-btn">
-          <span class="btn-text">Run Free Audit</span>
-          <span class="spinner">
-            <span class="loading-text">Scanning site...</span>
-          </span>
-        </button>
+        <button type="submit" id="submit-btn">Run Free Audit &rarr;</button>
       </form>
     </div>
 
@@ -331,20 +409,128 @@
     Powered by <span>Claude AI</span>
   </div>
 
-  <script>
-    const form = document.getElementById('audit-form');
-    const btn = document.getElementById('submit-btn');
-    const loadingText = btn.querySelector('.loading-text');
-    const messages = ['Scanning site...', 'Analyzing content...', 'Generating report...'];
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loading-overlay">
+    <svg class="loading-icon" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30 4C30 4 4 36 4 52C4 66.36 15.64 76 30 76C44.36 76 56 66.36 56 52C56 36 30 4 30 4Z" fill="rgba(220,38,38,0.15)" stroke="#dc2626" stroke-width="2.5"/>
+      <path d="M30 16C30 16 14 38 14 50C14 58.84 21.16 66 30 66" fill="none" stroke="rgba(220,38,38,0.4)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div class="loading-url" id="loading-url">Auditing <strong id="loading-url-text">...</strong></div>
+    <div class="loading-status" id="loading-status">
+      <div class="fact-label">Did you know?</div>
+      <div class="fact-stat" id="fact-stat"></div>
+      <div class="fact-support" id="fact-support"></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-percent" id="progress-percent">0%</div>
+    </div>
+  </div>
 
-    form.addEventListener('submit', function() {
-      btn.classList.add('loading');
-      btn.disabled = true;
-      let i = 0;
-      setInterval(function() {
-        i = (i + 1) % messages.length;
-        loadingText.textContent = messages[i];
-      }, 2500);
+  <script>
+    var form = document.getElementById('audit-form');
+    var overlay = document.getElementById('loading-overlay');
+    var statusEl = document.getElementById('loading-status');
+    var fillEl = document.getElementById('progress-fill');
+    var percentEl = document.getElementById('progress-percent');
+    var urlTextEl = document.getElementById('loading-url-text');
+
+    var facts = [
+      ['The average business takes 47 hours to respond to a new lead.', 'By then, they\u2019ve already called 3 competitors.'],
+      ['97% of website visitors leave without taking action.', 'Most businesses never find out why.'],
+      ['Adding a click-to-call phone number increases leads by 30%.', 'Most local business sites still don\u2019t have one.'],
+      ['80% of sales require at least 5 follow-ups.', 'Most businesses stop after 1.'],
+      ['A 1-second delay in page load time reduces conversions by 7%.', 'Speed is silent revenue.'],
+      ['Businesses that respond to leads within 5 minutes are 10x more likely to close.', 'Your website response time starts the clock.'],
+      ['Adding online ordering to a restaurant increases revenue by 18% on average.', 'The menu is there. The system isn\u2019t.'],
+      ['Reducing a contact form from 11 fields to 4 doubles conversion rates.', 'Friction is expensive.']
+    ];
+
+    var factStatEl = document.getElementById('fact-stat');
+    var factSupportEl = document.getElementById('fact-support');
+
+    function showFact(index) {
+      factStatEl.textContent = facts[index][0];
+      factSupportEl.textContent = facts[index][1];
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var urlVal = document.getElementById('url').value.trim();
+      urlTextEl.textContent = urlVal;
+      overlay.classList.add('active');
+
+      // Show first fact
+      var factIndex = 0;
+      showFact(factIndex);
+      statusEl.style.opacity = '1';
+
+      // Progress bar: 0 to 99 over 60 seconds
+      var duration = 60000;
+      var startTime = Date.now();
+      var progressStopped = false;
+
+      function updateProgress() {
+        if (progressStopped) return;
+        var elapsed = Date.now() - startTime;
+        var pct = Math.min(Math.round((elapsed / duration) * 100), 99);
+        fillEl.style.width = pct + '%';
+        percentEl.textContent = pct + '%';
+        if (pct < 99) requestAnimationFrame(updateProgress);
+      }
+      requestAnimationFrame(updateProgress);
+
+      // Cycle facts every 6 seconds with fade transition, loop
+      var msgTimer = setInterval(function() {
+        statusEl.style.opacity = '0';
+        setTimeout(function() {
+          factIndex = (factIndex + 1) % facts.length;
+          showFact(factIndex);
+          statusEl.style.opacity = '1';
+        }, 500);
+      }, 6000);
+
+      // Submit via fetch so we can detect completion
+      var formData = new FormData(form);
+      fetch(form.action, {
+        method: 'POST',
+        body: formData
+      }).then(function(response) {
+        progressStopped = true;
+        clearInterval(msgTimer);
+
+        // Snap to 100%
+        fillEl.style.width = '100%';
+        percentEl.textContent = '100%';
+        statusEl.innerHTML = '<div class="fact-stat">Report ready!</div>';
+        statusEl.style.opacity = '1';
+
+        return response.text().then(function(html) {
+          // Brief pause to show "Report ready!" then navigate
+          setTimeout(function() {
+            document.open();
+            document.write(html);
+            document.close();
+            // Push the final URL so back button works
+            if (response.url) {
+              history.replaceState(null, '', response.url);
+            }
+          }, 600);
+        });
+      }).catch(function() {
+        progressStopped = true;
+        clearInterval(msgTimer);
+        statusEl.innerHTML = '<div class="fact-stat">Something went wrong. Please try again.</div>';
+        statusEl.style.opacity = '1';
+        fillEl.style.width = '0%';
+        percentEl.textContent = '';
+        setTimeout(function() {
+          overlay.classList.remove('active');
+        }, 2000);
+      });
     });
   </script>
 </body>

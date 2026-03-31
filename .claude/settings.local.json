@@ -16,7 +16,11 @@
       "Read(//Users/davidjustima/Downloads/**)",
       "Read(//private/tmp/**)",
       "Bash(ls ~/Downloads/modestas*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npx skills:*)",
+      "Bash(npx ui-skills:*)",
+      "Bash(pip3 install:*)",
+      "Bash(curl -s http://127.0.0.1:5001/)"
     ]
   }
 }

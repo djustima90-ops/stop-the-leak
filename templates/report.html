@@ -525,6 +525,11 @@
     .action-check-item.checked {
       opacity: 0.5;
     }
+    .action-check-item.in-progress {
+      border-left: 3px solid #f59e0b;
+      padding-left: calc(1rem - 3px);
+      background: rgba(245, 158, 11, 0.04);
+    }
     .action-check-item input[type="checkbox"] {
       accent-color: #22c55e;
       width: 18px;
@@ -824,7 +829,13 @@
   </div>
 
   <div class="content">
-    <a class="back-link" href="/">&larr; Run another audit</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.8rem;margin-bottom:1.8rem;">
+      <a class="back-link" href="/" style="margin-bottom:0">&larr; Back to Home</a>
+      <div style="display:flex;align-items:center;gap:0.8rem;">
+        <span class="last-saved-indicator" id="last-saved" style="font-size:0.75rem;color:#64748b;display:none;">Last saved: <span id="last-saved-time">--</span></span>
+        <button class="save-share-btn" id="save-share-btn" style="padding:0.5rem 1.2rem;background:transparent;color:#94a3b8;border:1px solid #1e293b;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;">Save &amp; Share</button>
+      </div>
+    </div>
 
     <!-- Revenue Leaking Banner -->
     <div class="revenue-banner" id="revenue-banner">
@@ -860,6 +871,18 @@
       </div>
     </div>
 
+    <!-- Severity Focus Bar -->
+    <div class="focus-bar" id="focus-bar" style="margin-bottom:1rem;">
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem;">
+        <button class="focus-btn" data-focus="all" style="padding:0.5rem 1.2rem;background:#dc2626;color:#fff;border:1px solid #dc2626;border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;transition:all 0.15s;">All Findings</button>
+        <button class="focus-btn" data-focus="high" style="padding:0.5rem 1.2rem;background:#111827;color:#fca5a5;border:1px solid rgba(220,38,38,0.25);border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;transition:all 0.15s;">High Priority</button>
+        <button class="focus-btn" data-focus="medium" style="padding:0.5rem 1.2rem;background:#111827;color:#fde68a;border:1px solid rgba(217,119,6,0.25);border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;transition:all 0.15s;">Medium Priority</button>
+        <button class="focus-btn" data-focus="low" style="padding:0.5rem 1.2rem;background:#111827;color:#86efac;border:1px solid rgba(22,101,52,0.25);border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;transition:all 0.15s;">Low Priority</button>
+        <button class="focus-work-btn" id="focus-work-btn" style="padding:0.5rem 1.2rem;background:transparent;color:#64748b;border:1px solid #1e293b;border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:0.04em;transition:all 0.15s;display:none;margin-left:auto;">Work on these this month</button>
+      </div>
+      <div class="focus-summary" id="focus-summary" style="font-size:0.85rem;color:#94a3b8;font-weight:600;display:none;padding:0.6rem 1rem;background:#111827;border:1px solid #1e293b;border-radius:8px;"></div>
+    </div>
+
     <!-- Filters -->
     <div class="filter-bar">
       <div class="filter-group" id="category-filters">
@@ -867,12 +890,6 @@
         <button class="filter-btn" data-filter="lead">Lead Leaks</button>
         <button class="filter-btn" data-filter="conversion">Conversion Leaks</button>
         <button class="filter-btn" data-filter="followup">Follow-Up Leaks</button>
-      </div>
-      <div class="filter-group" id="severity-filters">
-        <button class="filter-btn active" data-severity="all">All Severity</button>
-        <button class="filter-btn" data-severity="high">High</button>
-        <button class="filter-btn" data-severity="medium">Medium</button>
-        <button class="filter-btn" data-severity="low">Low</button>
       </div>
     </div>
 
@@ -1362,7 +1379,6 @@
 
     // ==================== Filters ====================
     var activeCategoryFilter = 'all';
-    var activeSeverityFilter = 'all';
 
     function applyFilters() {
       document.querySelectorAll('.section[data-category]').forEach(function(section) {
@@ -1371,14 +1387,6 @@
           section.classList.remove('section-hidden');
         } else {
           section.classList.add('section-hidden');
-        }
-      });
-      document.querySelectorAll('.finding[data-severity]').forEach(function(card) {
-        var sev = card.getAttribute('data-severity');
-        if (activeSeverityFilter === 'all' || sev === activeSeverityFilter) {
-          card.classList.remove('finding-hidden');
-        } else {
-          card.classList.add('finding-hidden');
         }
       });
     }
@@ -1392,14 +1400,7 @@
       });
     });
 
-    document.querySelectorAll('#severity-filters .filter-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('#severity-filters .filter-btn').forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        activeSeverityFilter = btn.getAttribute('data-severity');
-        applyFilters();
-      });
-    });
+    // Severity filtering is now handled by the Focus Bar above
 
     // ==================== Confetti + Floating Text ====================
     function launchConfetti(originX, originY) {
@@ -1547,6 +1548,172 @@
 
     loadActionState();
 
+    // ==================== Report ID + Persistent State ====================
+    var reportDomain = '{{ url | replace("'", "\\'") }}'.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    var reportTimestamp = '{{ timestamp | replace("'", "\\'") }}'.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    var reportId = reportDomain + '-' + reportTimestamp;
+    var reportStateKey = 'stl-report-' + reportId;
+
+    function saveReportState() {
+      var state = { fixed: {}, inProgress: {} };
+      document.querySelectorAll('.action-checkbox').forEach(function(cb) {
+        var id = cb.getAttribute('data-id');
+        if (cb.checked) state.fixed[id] = true;
+      });
+      document.querySelectorAll('.action-check-item.in-progress').forEach(function(item) {
+        state.inProgress[item.getAttribute('data-id')] = true;
+      });
+      state.savedAt = new Date().toISOString();
+      try { localStorage.setItem(reportStateKey, JSON.stringify(state)); } catch(e) {}
+      updateLastSaved();
+    }
+
+    function loadReportState() {
+      try {
+        var saved = JSON.parse(localStorage.getItem(reportStateKey) || 'null');
+        if (!saved) return;
+        if (saved.inProgress) {
+          Object.keys(saved.inProgress).forEach(function(id) {
+            var item = document.querySelector('.action-check-item[data-id="' + id + '"]');
+            if (item) item.classList.add('in-progress');
+          });
+        }
+        updateLastSaved();
+      } catch(e) {}
+    }
+
+    function updateLastSaved() {
+      var el = document.getElementById('last-saved');
+      var timeEl = document.getElementById('last-saved-time');
+      try {
+        var saved = JSON.parse(localStorage.getItem(reportStateKey) || 'null');
+        if (saved && saved.savedAt) {
+          el.style.display = 'inline';
+          var d = new Date(saved.savedAt);
+          timeEl.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      } catch(e) {}
+    }
+
+    // Override saveActionState to also save report state
+    var origSaveAction = saveActionState;
+    saveActionState = function() {
+      origSaveAction();
+      saveReportState();
+    };
+
+    loadReportState();
+
+    // Save & Share button
+    document.getElementById('save-share-btn').addEventListener('click', function() {
+      saveReportState();
+      var shareUrl = window.location.origin + '/report/' + reportId;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareUrl).then(function() {
+          var btn = document.getElementById('save-share-btn');
+          btn.textContent = 'Link copied! Bookmark to return later';
+          btn.style.borderColor = '#22c55e';
+          btn.style.color = '#22c55e';
+          setTimeout(function() {
+            btn.innerHTML = 'Save &amp; Share';
+            btn.style.borderColor = '#1e293b';
+            btn.style.color = '#94a3b8';
+          }, 3000);
+        });
+      }
+    });
+
+    // ==================== Severity Focus Bar ====================
+    var activeFocus = 'all';
+
+    document.querySelectorAll('.focus-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        activeFocus = btn.getAttribute('data-focus');
+        // Update button styles
+        document.querySelectorAll('.focus-btn').forEach(function(b) {
+          b.style.background = '#111827';
+        });
+        if (activeFocus === 'all') {
+          btn.style.background = '#dc2626';
+          btn.style.borderColor = '#dc2626';
+          btn.style.color = '#fff';
+        } else {
+          btn.style.background = activeFocus === 'high' ? 'rgba(220,38,38,0.2)' : (activeFocus === 'medium' ? 'rgba(217,119,6,0.2)' : 'rgba(22,101,52,0.2)');
+        }
+        // Also reset "All" button
+        var allBtn = document.querySelector('.focus-btn[data-focus="all"]');
+        if (activeFocus !== 'all') {
+          allBtn.style.background = '#111827';
+          allBtn.style.borderColor = '#1e293b';
+          allBtn.style.color = '#94a3b8';
+        }
+
+        applyFocusFilter();
+      });
+    });
+
+    function applyFocusFilter() {
+      var findings = document.querySelectorAll('.finding[data-severity]');
+      var count = 0;
+      var totalImpact = 0;
+
+      findings.forEach(function(card) {
+        var sev = card.getAttribute('data-severity');
+        if (activeFocus === 'all' || sev === activeFocus) {
+          card.classList.remove('finding-hidden');
+          count++;
+          totalImpact += parseInt(card.getAttribute('data-loss') || 0, 10);
+        } else {
+          card.classList.add('finding-hidden');
+        }
+      });
+
+      // Also filter action items
+      document.querySelectorAll('.action-check-item').forEach(function(item) {
+        var cb = item.querySelector('.action-checkbox');
+        var sev = cb ? cb.getAttribute('data-severity') : '';
+        if (activeFocus === 'all' || sev === activeFocus) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      var summaryEl = document.getElementById('focus-summary');
+      var workBtn = document.getElementById('focus-work-btn');
+      if (activeFocus !== 'all') {
+        var label = activeFocus.charAt(0).toUpperCase() + activeFocus.slice(1);
+        summaryEl.style.display = 'block';
+        summaryEl.textContent = 'Showing ' + count + ' ' + label.toUpperCase() + ' priority leak' + (count !== 1 ? 's' : '') + ' \u2014 Total impact: $' + totalImpact.toLocaleString() + '/month';
+        workBtn.style.display = 'inline-block';
+      } else {
+        summaryEl.style.display = 'none';
+        workBtn.style.display = 'none';
+      }
+    }
+
+    // "Work on these this month" button
+    document.getElementById('focus-work-btn').addEventListener('click', function() {
+      document.querySelectorAll('.action-check-item').forEach(function(item) {
+        if (item.style.display !== 'none') {
+          var cb = item.querySelector('.action-checkbox');
+          if (cb && cb.getAttribute('data-severity') === activeFocus && !cb.checked) {
+            item.classList.add('in-progress');
+          }
+        }
+      });
+      saveReportState();
+      var btn = document.getElementById('focus-work-btn');
+      btn.textContent = 'Marked as in progress';
+      btn.style.borderColor = '#22c55e';
+      btn.style.color = '#22c55e';
+      setTimeout(function() {
+        btn.textContent = 'Work on these this month';
+        btn.style.borderColor = '#1e293b';
+        btn.style.color = '#64748b';
+      }, 2000);
+    });
+
     // ==================== Email Capture ====================
     document.getElementById('email-form').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -1556,6 +1723,20 @@
       var btn = document.getElementById('capture-btn');
       btn.textContent = 'Sending...';
       btn.disabled = true;
+      // Gather top 3 leaks from the report findings
+      var allFindings = document.querySelectorAll('.finding[data-loss]');
+      var topLeaks = [];
+      var findingsArr = [];
+      allFindings.forEach(function(f) {
+        var loss = parseInt(f.getAttribute('data-loss')) || 0;
+        var text = f.querySelector('.finding-text');
+        if (text && loss > 0) {
+          findingsArr.push({ finding: text.textContent.trim(), monthly_loss: loss });
+        }
+      });
+      findingsArr.sort(function(a, b) { return b.monthly_loss - a.monthly_loss; });
+      topLeaks = findingsArr.slice(0, 3);
+
       fetch('/capture-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1563,8 +1744,10 @@
           email: email,
           business_name: '{{ business_name | replace("'", "\\'") }}',
           url: '{{ url | replace("'", "\\'") }}',
+          domain: '{{ url | replace("'", "\\'") }}'.replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
           monthly_loss: totalMonthlyLoss,
-          annual_loss: totalMonthlyLoss * 12
+          annual_loss: totalMonthlyLoss * 12,
+          top_leaks: topLeaks
         })
       }).then(function(res) {
         if (res.ok) {

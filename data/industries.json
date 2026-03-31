@@ -159,6 +159,166 @@
     "low_loss_multiplier": 0.02,
     "local_context": "Berkshires lodging is highly seasonal with peak demand during fall foliage, Tanglewood season, and summer weekends — direct booking capability during these periods is the single highest-impact investment"
   },
+  "ecommerce": {
+    "name": "E-Commerce / Online Store",
+    "typical_monthly_revenue": 35000,
+    "typical_annual_revenue": 420000,
+    "keywords": ["online store", "ecommerce", "e-commerce", "shopify", "woocommerce", "shop", "buy online", "cart", "checkout", "products", "merch", "merchandise"],
+    "top_leak_patterns": [
+      "No clear call-to-action on product pages — shoppers abandon without adding to cart",
+      "No abandoned cart recovery or email capture at checkout",
+      "No trust badges, return policy, or shipping info visible during purchase flow"
+    ],
+    "language_style": "conversion-focused and data-driven — e-commerce operators think in AOV, conversion rate, and cart abandonment, speak their language",
+    "high_loss_multiplier": 0.09,
+    "medium_loss_multiplier": 0.045,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Online stores compete in a global marketplace where every friction point in the purchase flow costs real revenue — speed, trust signals, and checkout simplicity determine who wins"
+  },
+  "hotel_hospitality": {
+    "name": "Hotel / Hospitality",
+    "typical_monthly_revenue": 55000,
+    "typical_annual_revenue": 660000,
+    "keywords": ["hotel", "motel", "bed and breakfast", "inn", "resort", "hospitality", "accommodation", "rooms", "suites", "stay", "book a room", "guest"],
+    "top_leak_patterns": [
+      "No direct booking engine — paying 15-25% OTA commissions on every reservation",
+      "No visible room photos, amenities list, or virtual tour to drive direct bookings",
+      "No seasonal packages or special offers to compete with OTA pricing"
+    ],
+    "language_style": "hospitality-minded and margin-focused — hoteliers think in RevPAR, occupancy rates, and OTA dependency, frame findings around direct booking revenue",
+    "high_loss_multiplier": 0.09,
+    "medium_loss_multiplier": 0.045,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Hotels and hospitality businesses lose significant margin to OTA commissions — every direct booking recovered is pure profit improvement"
+  },
+  "financial_services": {
+    "name": "Financial Services / Advisory",
+    "typical_monthly_revenue": 48000,
+    "typical_annual_revenue": 576000,
+    "keywords": ["financial advisor", "financial planner", "insurance agent", "insurance", "mortgage broker", "mortgage", "wealth management", "financial services", "investment", "retirement planning", "tax preparation", "accounting", "CPA", "bookkeeping"],
+    "top_leak_patterns": [
+      "No consultation booking form — high-value prospects leave when they can't schedule immediately",
+      "No credentials, certifications, or regulatory compliance info visible — trust is everything in financial services",
+      "No educational content or lead magnets to capture prospects still in research phase"
+    ],
+    "language_style": "professional and trust-centered — financial professionals think in AUM, client lifetime value, and referral rates, frame findings around qualified lead acquisition",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Financial services clients represent significant lifetime value — a single missed prospect can mean tens of thousands in lost recurring revenue over the relationship"
+  },
+  "marketing_agency": {
+    "name": "Marketing / Digital Agency",
+    "typical_monthly_revenue": 40000,
+    "typical_annual_revenue": 480000,
+    "keywords": ["digital marketing", "marketing agency", "SEO agency", "advertising", "social media marketing", "PPC", "web design agency", "branding", "creative agency", "content marketing"],
+    "top_leak_patterns": [
+      "No case studies or portfolio with measurable results — agencies must prove ROI to win clients",
+      "No clear service pages with pricing tiers or engagement models",
+      "No lead qualification form to filter prospects by budget and needs"
+    ],
+    "language_style": "results-oriented and metric-driven — agency owners think in retainer value, client acquisition cost, and churn rate, they need to see you speak their language",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Marketing agencies face the irony of helping clients with marketing while often neglecting their own — a strong website is their most important sales asset"
+  },
+  "photography_videography": {
+    "name": "Photography / Videography",
+    "typical_monthly_revenue": 12000,
+    "typical_annual_revenue": 144000,
+    "keywords": ["photographer", "photography", "videographer", "videography", "studio", "portrait", "wedding photographer", "event photographer", "headshots", "commercial photography", "drone", "film"],
+    "top_leak_patterns": [
+      "No portfolio gallery with recent work — visual businesses must show, not tell",
+      "No booking form or availability calendar — clients book the first photographer who responds",
+      "No pricing guide or package information — prospects leave to find someone more transparent"
+    ],
+    "language_style": "visual and experience-focused — photographers think in bookings, session value, and seasonal demand, connect online presence to booking conversion",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Photography and video businesses are inherently visual — their website IS their portfolio, and a weak online presence directly costs bookings"
+  },
+  "cleaning_services": {
+    "name": "Cleaning / Janitorial Services",
+    "typical_monthly_revenue": 20000,
+    "typical_annual_revenue": 240000,
+    "keywords": ["cleaning", "janitorial", "maid service", "house cleaning", "commercial cleaning", "pressure washing", "power washing", "carpet cleaning", "deep clean", "office cleaning", "residential cleaning"],
+    "top_leak_patterns": [
+      "No instant quote or booking form — cleaning customers choose the easiest provider to hire",
+      "No visible service area map or zip code checker",
+      "No before/after photos or customer reviews — trust is critical for in-home services"
+    ],
+    "language_style": "simple and trust-focused — cleaning service owners think in recurring clients and average job value, speak practically about growing their client base",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Cleaning services live and die by trust and convenience — customers let these people into their homes, so reviews, background check badges, and easy booking are non-negotiable"
+  },
+  "food_truck": {
+    "name": "Food Truck / Catering",
+    "typical_monthly_revenue": 15000,
+    "typical_annual_revenue": 180000,
+    "keywords": ["food truck", "catering", "pop-up", "mobile food", "catering service", "event catering", "private chef", "meal prep", "food delivery", "lunch truck"],
+    "top_leak_patterns": [
+      "No schedule or location tracker — customers can't find you if they don't know where you'll be",
+      "No catering inquiry form or event booking capability",
+      "No menu with photos and pricing — people eat with their eyes first"
+    ],
+    "language_style": "energetic and hustle-focused — food truck operators think in daily revenue, event bookings, and repeat customers, keep it practical and action-oriented",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Food trucks and catering businesses depend on discoverability and event bookings — a website that shows where you are, what you serve, and how to book is essential"
+  },
+  "childcare_education": {
+    "name": "Childcare / Education",
+    "typical_monthly_revenue": 25000,
+    "typical_annual_revenue": 300000,
+    "keywords": ["daycare", "childcare", "preschool", "tutoring", "learning center", "after school", "montessori", "kindergarten", "nursery", "child development", "education", "kids", "children"],
+    "top_leak_patterns": [
+      "No enrollment inquiry form or waitlist signup — parents research extensively and need an easy next step",
+      "No visible licensing, certifications, or safety credentials — parents need reassurance",
+      "No photos of facility, staff bios, or curriculum overview — parents need to see where their children will be"
+    ],
+    "language_style": "warm and trust-building — childcare operators know parents are making one of their most important decisions, frame everything around safety, quality, and peace of mind",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Childcare and education businesses have high lifetime value per family — a single enrolled child often represents years of monthly tuition, making every missed inquiry extremely costly"
+  },
+  "veterinary": {
+    "name": "Veterinary / Pet Care",
+    "typical_monthly_revenue": 35000,
+    "typical_annual_revenue": 420000,
+    "keywords": ["vet", "veterinary", "veterinarian", "animal hospital", "pet grooming", "pet care", "dog groomer", "pet boarding", "kennel", "pet sitting", "animal clinic", "pet wellness"],
+    "top_leak_patterns": [
+      "No online appointment booking — pet owners book with whoever is easiest to reach in a crisis",
+      "No emergency hours or after-hours contact info visible — this is life-or-death for pet owners",
+      "No staff bios, facility photos, or patient reviews — pet owners need to trust who handles their animals"
+    ],
+    "language_style": "compassionate and trust-focused — vet clinic owners understand the emotional bond between pets and owners, frame findings around patient retention and new client acquisition",
+    "high_loss_multiplier": 0.08,
+    "medium_loss_multiplier": 0.04,
+    "low_loss_multiplier": 0.015,
+    "local_context": "Veterinary and pet care businesses benefit from high client loyalty — once a pet owner trusts a provider, they stay for years, making each new client acquisition extremely valuable"
+  },
+  "moving_storage": {
+    "name": "Moving / Storage",
+    "typical_monthly_revenue": 30000,
+    "typical_annual_revenue": 360000,
+    "keywords": ["moving company", "movers", "storage", "relocation", "moving services", "packing", "hauling", "junk removal", "self storage", "moving truck", "local movers", "long distance moving"],
+    "top_leak_patterns": [
+      "No instant quote form or moving calculator — customers get quotes from the first 3 companies that respond",
+      "No visible licensing, insurance, and bonding information — trust is everything when strangers handle your belongings",
+      "No reviews or ratings integration — moving is one of the most review-dependent industries"
+    ],
+    "language_style": "straightforward and trust-building — moving company owners know customers are anxious about the process, frame findings around speed-to-quote and trust signals",
+    "high_loss_multiplier": 0.09,
+    "medium_loss_multiplier": 0.045,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Moving and storage businesses are highly commoditized — the company that responds fastest with a clear quote wins the job, making website speed-to-lead the single biggest differentiator"
+  },
   "default": {
     "name": "Local Business",
     "typical_monthly_revenue": 30000,

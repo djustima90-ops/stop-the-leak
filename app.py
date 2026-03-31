@@ -1,9 +1,14 @@
 """Stop the Leak — Flask app tying the audit pipeline together."""
 
 import csv
+import os
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
+
+import requests as http_requests
+import resend
+from dotenv import load_dotenv
 
 from flask import Flask, jsonify, render_template, request
 
@@ -14,6 +19,9 @@ from tools.detect_industry import detect_industry
 from tools.call_claude import call_claude
 from tools.generate_report import generate_report
 from tools.save_output import save_output
+
+load_dotenv()
+resend.api_key = os.getenv("RESEND_API_KEY")
 
 app = Flask(__name__)
 
@@ -30,6 +38,21 @@ def index():
 def audit():
     """Run the full leak audit pipeline and return the report."""
     url = request.form["url"].strip()
+
+    # URL normalization: allow bare domains like "facebook.com"
+    if not url.startswith("http://") and not url.startswith("https://"):
+        if url.startswith("www."):
+            url = "https://" + url
+        else:
+            url = "https://" + url
+
+    # Try https first, fall back to http
+    try:
+        http_requests.head(url, timeout=5, allow_redirects=True)
+    except Exception:
+        if url.startswith("https://"):
+            url = "http://" + url[8:]
+
     business_name = request.form.get("business_name", "").strip()
     if not business_name:
         business_name = urlparse(url).netloc
@@ -51,12 +74,21 @@ def audit():
 
 @app.route("/capture-email", methods=["POST"])
 def capture_email():
-    """Append lead info to leads.csv."""
+    """Save lead to CSV and send emails via Resend."""
     data = request.get_json(force=True)
     email = data.get("email", "").strip()
     if not email:
         return jsonify({"error": "email required"}), 400
 
+    business_name = data.get("business_name", "Unknown")
+    url = data.get("url", "")
+    domain = data.get("domain", urlparse(url).netloc if url else "")
+    monthly_loss = data.get("monthly_loss", 0)
+    annual_loss = data.get("annual_loss", 0)
+    top_leaks = data.get("top_leaks", [])
+    now = datetime.now()
+
+    # Always save to CSV first
     write_header = not LEADS_CSV.exists()
     with open(LEADS_CSV, "a", newline="") as f:
         writer = csv.writer(f)
@@ -66,14 +98,120 @@ def capture_email():
                  "monthly_loss", "annual_loss"]
             )
         writer.writerow([
-            datetime.now().isoformat(),
-            email,
-            data.get("business_name", ""),
-            data.get("url", ""),
-            data.get("monthly_loss", 0),
-            data.get("annual_loss", 0),
+            now.isoformat(), email, business_name, url,
+            monthly_loss, annual_loss,
         ])
+
+    # Send emails via Resend (non-blocking — failures don't affect response)
+    try:
+        _send_owner_email(email, business_name, domain, top_leaks,
+                          monthly_loss, annual_loss)
+    except Exception as e:
+        print(f"[Resend] Owner email failed: {e}")
+
+    try:
+        _send_notification_email(business_name, url, email, domain,
+                                 monthly_loss, annual_loss, now)
+    except Exception as e:
+        print(f"[Resend] Notification email failed: {e}")
+
     return jsonify({"ok": True})
+
+
+def _send_owner_email(to_email, business_name, domain, top_leaks,
+                      monthly_loss, annual_loss):
+    """Send the leak report email to the business owner."""
+    leak_bullets = ""
+    for leak in top_leaks[:3]:
+        finding = leak.get("finding", "")
+        loss = leak.get("monthly_loss", 0)
+        leak_bullets += f"""
+        <tr>
+          <td style="padding:12px 20px;border-bottom:1px solid #1e293b;color:#e2e8f0;font-size:15px;">
+            <span style="color:#ef4444;font-weight:600;">&#x25CF;</span>&nbsp; {finding}
+            <span style="float:right;color:#ef4444;font-weight:700;">-${loss:,}/mo</span>
+          </td>
+        </tr>"""
+
+    html_body = f"""
+    <div style="background:#0a0a0a;padding:0;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#0f0f0f;border:1px solid #1e293b;">
+        <tr>
+          <td style="padding:32px 24px 24px;text-align:center;border-bottom:1px solid #1e293b;">
+            <span style="font-size:28px;font-weight:800;letter-spacing:-0.5px;">
+              <span style="color:#ef4444;">Stop</span><span style="color:#ffffff;"> the </span><span style="color:#ef4444;">Leak</span>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 24px 16px;">
+            <p style="color:#94a3b8;font-size:15px;margin:0 0 4px;">Here's what we found on</p>
+            <p style="color:#ffffff;font-size:20px;font-weight:700;margin:0 0 24px;">{domain}</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid #1e293b;border-radius:8px;overflow:hidden;">
+              <tr>
+                <td style="padding:16px 20px;color:#94a3b8;font-size:13px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1e293b;font-weight:600;">
+                  Top Leaks Found
+                </td>
+              </tr>
+              {leak_bullets}
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px;text-align:center;">
+            <div style="background:linear-gradient(135deg,#1a0000,#0f0f0f);border:1px solid #ef4444;border-radius:12px;padding:28px;">
+              <p style="color:#94a3b8;font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Estimated Monthly Loss</p>
+              <p style="color:#ef4444;font-size:42px;font-weight:800;margin:0;letter-spacing:-1px;">${monthly_loss:,}/mo</p>
+              <p style="color:#94a3b8;font-size:16px;margin:8px 0 0;">That's <strong style="color:#ef4444;">${annual_loss:,}/year</strong> walking out the door</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 24px 32px;text-align:center;">
+            <a href="https://calendly.com/djustima90/30min"
+               style="display:inline-block;background:#ef4444;color:#ffffff;font-size:16px;font-weight:700;padding:16px 40px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
+              Book a Free Call to Fix This
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 24px;border-top:1px solid #1e293b;text-align:center;">
+            <p style="color:#475569;font-size:12px;margin:0;">Built by David Justima &nbsp;|&nbsp; hello@stoptheleak.com</p>
+          </td>
+        </tr>
+      </table>
+    </div>"""
+
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": [to_email],
+        "subject": f"Your Website Leak Report — {business_name}",
+        "html": html_body,
+    })
+
+
+def _send_notification_email(business_name, url, lead_email, domain,
+                             monthly_loss, annual_loss, timestamp):
+    """Send lead notification to David."""
+    body = f"""New lead captured from Stop the Leak:
+
+Business: {business_name}
+URL: {url}
+Domain: {domain}
+Email: {lead_email}
+Monthly Loss: ${monthly_loss:,}
+Annual Loss: ${annual_loss:,}
+Timestamp: {timestamp.strftime('%B %d, %Y at %I:%M %p')}
+
+View their report at: {url}
+"""
+
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": ["djustima90@gmail.com"],
+        "subject": f"\U0001f534 New Lead: {business_name} — ${monthly_loss:,}/month identified",
+        "text": body,
+    })
 
 
 @app.route("/website")

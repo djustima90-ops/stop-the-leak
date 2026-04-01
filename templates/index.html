@@ -264,16 +264,68 @@
       color: #e2e8f0;
     }
 
-    /* Dripping water drop SVG */
-    .loading-icon {
-      width: 60px;
-      height: 60px;
+    /* Dripping dollar coin */
+    .loading-icon-wrap {
+      position: relative;
+      width: 80px;
+      height: 120px;
       margin-bottom: 2rem;
-      animation: dropPulse 1.5s ease-in-out infinite;
     }
-    @keyframes dropPulse {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.1); opacity: 1; }
+    .coin-glow {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.08) 40%, transparent 70%);
+      filter: blur(8px);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+    .loading-icon {
+      width: 80px;
+      height: 120px;
+      position: relative;
+      z-index: 1;
+    }
+    .coin-group {
+      animation: coinPulse 3s ease-in-out infinite;
+      transform-origin: 40px 36px;
+    }
+    @keyframes coinPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* Drip animation */
+    .drip-drop {
+      animation: dripFall 2.5s ease-in infinite;
+      transform-origin: 40px 62px;
+    }
+    @keyframes dripFall {
+      0%   { transform: translateY(0) scaleY(0.3); opacity: 0; }
+      15%  { transform: translateY(0) scaleY(0.5); opacity: 0.8; }
+      35%  { transform: translateY(2px) scaleY(1); opacity: 1; }
+      50%  { transform: translateY(4px) scaleY(1.4); opacity: 1; }
+      60%  { transform: translateY(8px) scaleY(1.8); opacity: 0.9; }
+      70%  { transform: translateY(20px) scaleY(2.2); opacity: 0.7; }
+      85%  { transform: translateY(38px) scaleY(1.6); opacity: 0.3; }
+      100% { transform: translateY(50px) scaleY(1); opacity: 0; }
+    }
+
+    /* Tinkle dots */
+    .tinkle { animation: tinkle 2.5s ease-in-out infinite; }
+    .tinkle-1 { animation-delay: 0s; }
+    .tinkle-2 { animation-delay: 0.8s; }
+    .tinkle-3 { animation-delay: 1.6s; }
+    @keyframes tinkle {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      30% { opacity: 1; transform: scale(1); }
+      60% { opacity: 0; transform: scale(0.5); }
     }
 
     .loading-status {
@@ -411,10 +463,49 @@
 
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loading-overlay">
-    <svg class="loading-icon" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M30 4C30 4 4 36 4 52C4 66.36 15.64 76 30 76C44.36 76 56 66.36 56 52C56 36 30 4 30 4Z" fill="rgba(220,38,38,0.15)" stroke="#dc2626" stroke-width="2.5"/>
-      <path d="M30 16C30 16 14 38 14 50C14 58.84 21.16 66 30 66" fill="none" stroke="rgba(220,38,38,0.4)" stroke-width="2" stroke-linecap="round"/>
-    </svg>
+    <div class="loading-icon-wrap">
+      <div class="coin-glow"></div>
+      <svg class="loading-icon" viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Coin 3D gradient -->
+          <radialGradient id="coinFace" cx="45%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="#fcd34d"/>
+            <stop offset="60%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#b45309"/>
+          </radialGradient>
+          <!-- Rim gradient -->
+          <linearGradient id="coinRim" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fcd34d"/>
+            <stop offset="100%" stop-color="#92400e"/>
+          </linearGradient>
+          <!-- Drip gradient -->
+          <linearGradient id="dripGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#d97706" stop-opacity="0.6"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Coin group with pulse -->
+        <g class="coin-group">
+          <!-- Coin body -->
+          <circle cx="40" cy="36" r="28" fill="url(#coinFace)" stroke="url(#coinRim)" stroke-width="3"/>
+          <!-- Inner rim for depth -->
+          <circle cx="40" cy="36" r="23" fill="none" stroke="rgba(252,211,77,0.3)" stroke-width="1"/>
+          <!-- Specular highlight -->
+          <ellipse cx="34" cy="28" rx="10" ry="7" fill="rgba(255,255,255,0.18)"/>
+          <!-- Dollar sign -->
+          <text x="40" y="44" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="28" font-weight="800" fill="#ffffff" style="text-shadow:0 1px 2px rgba(0,0,0,0.3);">$</text>
+
+          <!-- Tinkle dots -->
+          <circle class="tinkle tinkle-1" cx="14" cy="16" r="2" fill="#fcd34d"/>
+          <circle class="tinkle tinkle-2" cx="68" cy="22" r="1.5" fill="#fde68a"/>
+          <circle class="tinkle tinkle-3" cx="60" cy="10" r="1.8" fill="#fcd34d"/>
+        </g>
+
+        <!-- Dripping drop -->
+        <ellipse class="drip-drop" cx="40" cy="66" rx="4" ry="6" fill="url(#dripGrad)"/>
+      </svg>
+    </div>
     <div class="loading-url" id="loading-url">Auditing <strong id="loading-url-text">...</strong></div>
     <div class="loading-status" id="loading-status">
       <div class="fact-label">Did you know?</div>

@@ -21,7 +21,8 @@
       "Bash(npx ui-skills:*)",
       "Bash(pip3 install:*)",
       "Bash(curl -s http://127.0.0.1:5001/)",
-      "Bash(pip3 show:*)"
+      "Bash(pip3 show:*)",
+      "Bash(curl:*)"
     ]
   }
 }

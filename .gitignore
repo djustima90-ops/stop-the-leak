@@ -1,4 +1,5 @@
 .env
+leads.csv
 outputs/
 reports/
 __pycache__/

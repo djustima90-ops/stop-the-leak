@@ -35,7 +35,7 @@ limiter = Limiter(
 )
 
 LEADS_CSV = Path(__file__).resolve().parent / "leads.csv"
-REPORTS_DIR = Path(__file__).resolve().parent / "reports"
+REPORTS_DIR = Path("/tmp/reports")
 REPORTS_DIR.mkdir(exist_ok=True)
 
 
@@ -45,48 +45,116 @@ def index():
     return render_template("index.html")
 
 
+def _error_page(title, message, details=""):
+    """Return a styled, on-brand error page."""
+    detail_html = f'<p style="color:#94a3b8;font-size:0.95rem;line-height:1.7;white-space:pre-line;">{details}</p>' if details else ""
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+        '<title>Error — Stop the Leak</title>'
+        '<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
+        'background:#09101d;color:#e2e8f0;display:flex;align-items:center;justify-content:center;'
+        'min-height:100vh;margin:0;text-align:center;padding:2rem;}'
+        '.wrap{max-width:520px}'
+        '.title{font-size:1.8rem;font-weight:800;margin-bottom:1rem;}'
+        '.title span{color:#ef4444}'
+        'p{color:#94a3b8;line-height:1.7;margin-bottom:1.5rem;}'
+        'ul{text-align:left;display:inline-block;color:#94a3b8;line-height:2;margin-bottom:2rem;padding-left:1.2rem;}'
+        'a{display:inline-block;background:#dc2626;color:#fff;padding:0.8rem 2rem;'
+        'border-radius:8px;text-decoration:none;font-weight:700;}'
+        'a:hover{background:#ef4444}</style></head>'
+        f'<body><div class="wrap">'
+        f'<div class="title"><span>{title}</span></div>'
+        f'<p>{message}</p>'
+        f'{detail_html}'
+        f'<a href="/">&larr; Try Again</a>'
+        f'</div></body></html>'
+    )
+
+
 @app.route("/audit", methods=["POST"])
 @limiter.limit("10 per hour")
 def audit():
     """Run the full leak audit pipeline and return the report."""
-    url = request.form["url"].strip()
-
-    # URL normalization: allow bare domains like "facebook.com"
-    if not url.startswith("http://") and not url.startswith("https://"):
-        if url.startswith("www."):
-            url = "https://" + url
-        else:
-            url = "https://" + url
-
-    # Try https first, fall back to http
     try:
-        http_requests.head(url, timeout=5, allow_redirects=True)
-    except Exception:
-        if url.startswith("https://"):
-            url = "http://" + url[8:]
+        url = request.form["url"].strip()
 
-    business_name = request.form.get("business_name", "").strip()
-    if not business_name:
-        business_name = urlparse(url).netloc
+        # URL normalization: allow bare domains like "facebook.com"
+        if not url.startswith("http://") and not url.startswith("https://"):
+            if url.startswith("www."):
+                url = "https://" + url
+            else:
+                url = "https://" + url
 
-    html = scrape_site(url)
-    content = extract_content(html, url)
-    brand = extract_brand(url)
-    industry = detect_industry(content)
-    analysis = call_claude(content, industry)
+        # Try https first, fall back to http
+        try:
+            http_requests.head(url, timeout=5, allow_redirects=True)
+        except Exception:
+            if url.startswith("https://"):
+                url = "http://" + url[8:]
 
-    timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
-    report_html = generate_report(
-        analysis, business_name, url, timestamp, industry, brand,
-    )
-    save_output(report_html, business_name)
+        business_name = request.form.get("business_name", "").strip()
+        if not business_name:
+            business_name = urlparse(url).netloc
 
-    # Save to a temp file so the report survives page reload
-    report_id = uuid.uuid4().hex[:12]
-    report_file = REPORTS_DIR / f"{report_id}.html"
-    report_file.write_text(report_html, encoding="utf-8")
+        try:
+            html = scrape_site(url)
+        except (ConnectionError, http_requests.exceptions.ConnectionError,
+                http_requests.exceptions.Timeout,
+                http_requests.exceptions.MissingSchema) as e:
+            print(f"[Audit] Scrape failed for {url}: {e}")
+            return _error_page(
+                "We couldn't reach that website.",
+                "This usually means:",
+                details=(
+                    '<ul>'
+                    '<li>The URL may be misspelled</li>'
+                    '<li>The website is currently down</li>'
+                    '<li>The site is blocking automated requests</li>'
+                    '</ul>'
+                    '<p style="color:#64748b;font-size:0.85rem;">Please check the URL and try again.</p>'
+                ),
+            ), 502
+        except Exception as e:
+            print(f"[Audit] Scrape error for {url}: {e}")
+            return _error_page(
+                "We couldn't reach that website.",
+                "This usually means:",
+                details=(
+                    '<ul>'
+                    '<li>The URL may be misspelled</li>'
+                    '<li>The website is currently down</li>'
+                    '<li>The site is blocking automated requests</li>'
+                    '</ul>'
+                    '<p style="color:#64748b;font-size:0.85rem;">Please check the URL and try again.</p>'
+                ),
+            ), 502
 
-    return redirect(url_for("view_report", report_id=report_id))
+        content = extract_content(html, url)
+        brand = extract_brand(url)
+        industry = detect_industry(content)
+        analysis = call_claude(content, industry)
+
+        timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+        report_html = generate_report(
+            analysis, business_name, url, timestamp, industry, brand,
+        )
+        save_output(report_html, business_name)
+
+        # Save to a temp file so the report survives page reload
+        report_id = uuid.uuid4().hex[:12]
+        report_file = REPORTS_DIR / f"{report_id}.html"
+        report_file.write_text(report_html, encoding="utf-8")
+
+        return redirect(url_for("view_report", report_id=report_id))
+
+    except Exception as e:
+        print(f"[Audit] Unexpected error: {e}")
+        return _error_page(
+            "Something went wrong.",
+            "An unexpected error occurred while generating your report. "
+            "Please try again in a moment.",
+        ), 500
 
 
 @app.route("/report/<report_id>")

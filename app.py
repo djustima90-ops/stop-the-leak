@@ -2,6 +2,7 @@
 
 import csv
 import os
+import uuid
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -10,7 +11,9 @@ import requests as http_requests
 import resend
 from dotenv import load_dotenv
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from tools.scrape_site import scrape_site
 from tools.extract_content import extract_content
@@ -24,8 +27,16 @@ load_dotenv()
 resend.api_key = os.getenv("RESEND_API_KEY")
 
 app = Flask(__name__)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["10 per hour"],
+    storage_uri="memory://",
+)
 
 LEADS_CSV = Path(__file__).resolve().parent / "leads.csv"
+REPORTS_DIR = Path(__file__).resolve().parent / "reports"
+REPORTS_DIR.mkdir(exist_ok=True)
 
 
 @app.route("/")
@@ -35,6 +46,7 @@ def index():
 
 
 @app.route("/audit", methods=["POST"])
+@limiter.limit("10 per hour")
 def audit():
     """Run the full leak audit pipeline and return the report."""
     url = request.form["url"].strip()
@@ -69,10 +81,28 @@ def audit():
     )
     save_output(report_html, business_name)
 
-    return report_html
+    # Save to a temp file so the report survives page reload
+    report_id = uuid.uuid4().hex[:12]
+    report_file = REPORTS_DIR / f"{report_id}.html"
+    report_file.write_text(report_html, encoding="utf-8")
+
+    return redirect(url_for("view_report", report_id=report_id))
+
+
+@app.route("/report/<report_id>")
+def view_report(report_id):
+    """Serve a previously generated report by ID."""
+    # Sanitize: only allow hex characters
+    if not all(c in "0123456789abcdef" for c in report_id):
+        return "Invalid report ID", 400
+    report_file = REPORTS_DIR / f"{report_id}.html"
+    if not report_file.exists():
+        return "Report not found. Please run a new audit.", 404
+    return report_file.read_text(encoding="utf-8")
 
 
 @app.route("/capture-email", methods=["POST"])
+@limiter.limit("5 per hour")
 def capture_email():
     """Save lead to CSV and send emails via Resend."""
     data = request.get_json(force=True)
@@ -212,6 +242,38 @@ View their report at: {url}
         "subject": f"\U0001f534 New Lead: {business_name} — ${monthly_loss:,}/month identified",
         "text": body,
     })
+
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    """Friendly page when rate limit is exceeded."""
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+        '<title>Rate Limit — Stop the Leak</title>'
+        '<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
+        'background:#09101d;color:#e2e8f0;display:flex;align-items:center;justify-content:center;'
+        'min-height:100vh;margin:0;text-align:center;padding:2rem;}'
+        '.wrap{max-width:480px}.title{font-size:2rem;font-weight:800;margin-bottom:1rem;}'
+        '.title span{color:#ef4444}p{color:#94a3b8;line-height:1.6;margin-bottom:2rem;}'
+        'a{display:inline-block;background:#dc2626;color:#fff;padding:0.8rem 2rem;'
+        'border-radius:8px;text-decoration:none;font-weight:700;}'
+        'a:hover{background:#ef4444}</style></head>'
+        '<body><div class="wrap">'
+        '<div class="title">Slow <span>Down</span></div>'
+        "<p>You've run too many audits. Please wait an hour and try again.</p>"
+        '<a href="/">Back to Home</a>'
+        '</div></body></html>',
+        429,
+    )
+
+
+@app.route("/health")
+def health():
+    """Return env var status for debugging (values hidden)."""
+    keys = ["RESEND_API_KEY", "ANTHROPIC_API_KEY"]
+    status = {k: bool(os.getenv(k)) for k in keys}
+    return jsonify({"env": status})
 
 
 @app.route("/website")

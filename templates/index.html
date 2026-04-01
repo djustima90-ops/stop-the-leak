@@ -450,8 +450,12 @@
 
     var factStatEl = document.getElementById('fact-stat');
     var factSupportEl = document.getElementById('fact-support');
+    var factCycleActive = false;
 
     function showFact(index) {
+      // Clear previous content completely before setting new text
+      factStatEl.textContent = '';
+      factSupportEl.textContent = '';
       factStatEl.textContent = facts[index][0];
       factSupportEl.textContent = facts[index][1];
     }
@@ -463,10 +467,11 @@
       urlTextEl.textContent = urlVal;
       overlay.classList.add('active');
 
-      // Show first fact
+      // Show first fact immediately
       var factIndex = 0;
       showFact(factIndex);
       statusEl.style.opacity = '1';
+      factCycleActive = true;
 
       // Progress bar: 0 to 99 over 60 seconds
       var duration = 60000;
@@ -483,14 +488,17 @@
       }
       requestAnimationFrame(updateProgress);
 
-      // Cycle facts every 6 seconds with fade transition, loop
+      // Cycle facts every 6 seconds: fade out fully, swap text, fade back in
       var msgTimer = setInterval(function() {
+        if (!factCycleActive) return;
         statusEl.style.opacity = '0';
+        // Wait for the CSS opacity transition (500ms) to complete before swapping
         setTimeout(function() {
+          if (!factCycleActive) return;
           factIndex = (factIndex + 1) % facts.length;
           showFact(factIndex);
           statusEl.style.opacity = '1';
-        }, 500);
+        }, 550);
       }, 6000);
 
       // Submit via fetch so we can detect completion
@@ -500,30 +508,39 @@
         body: formData
       }).then(function(response) {
         progressStopped = true;
+        factCycleActive = false;
         clearInterval(msgTimer);
 
         // Snap to 100%
         fillEl.style.width = '100%';
         percentEl.textContent = '100%';
-        statusEl.innerHTML = '<div class="fact-stat">Report ready!</div>';
+        // Clear fact elements and show completion message
+        factStatEl.textContent = '';
+        factSupportEl.textContent = '';
+        factStatEl.textContent = 'Report ready!';
         statusEl.style.opacity = '1';
 
         return response.text().then(function(html) {
           // Brief pause to show "Report ready!" then navigate
           setTimeout(function() {
-            document.open();
-            document.write(html);
-            document.close();
-            // Push the final URL so back button works
-            if (response.url) {
-              history.replaceState(null, '', response.url);
+            // Redirect to the report URL (server now redirects to /report/<id>)
+            if (response.redirected && response.url) {
+              window.location.href = response.url;
+            } else {
+              document.open();
+              document.write(html);
+              document.close();
             }
           }, 600);
         });
-      }).catch(function() {
+      }).catch(function(err) {
         progressStopped = true;
+        factCycleActive = false;
         clearInterval(msgTimer);
-        statusEl.innerHTML = '<div class="fact-stat">Something went wrong. Please try again.</div>';
+        console.error('[Audit] Request failed:', err);
+        factStatEl.textContent = '';
+        factSupportEl.textContent = '';
+        factStatEl.textContent = 'Something went wrong. Please try again.';
         statusEl.style.opacity = '1';
         fillEl.style.width = '0%';
         percentEl.textContent = '';

@@ -511,6 +511,25 @@
     .action-severity-label.high { color: #fca5a5; }
     .action-severity-label.medium { color: #fde68a; }
     .action-severity-label.low { color: #86efac; }
+    .severity-complete-banner {
+      display: none;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #22c55e;
+    }
+    .severity-complete-banner.visible { display: block; }
+    .action-severity-label .severity-check {
+      display: none;
+      color: #22c55e;
+      font-weight: 700;
+      margin-left: 0.3rem;
+    }
+    .action-severity-label .severity-check.visible { display: inline; }
 
     /* Action Check Item */
     .action-check-item {
@@ -990,6 +1009,7 @@
     </div>
 
     <!-- Action Report — Prescription Center -->
+    {% if lead_leaks or conversion_leaks or follow_up_leaks %}
     <div class="action-report">
       <h2>Action Report &mdash; Your Complete Fix List</h2>
       <p class="action-sub">Check off each fix to watch your revenue leak shrink in real time</p>
@@ -1022,7 +1042,7 @@
 
       {% if high_actions %}
       <div class="action-severity-group">
-        <div class="action-severity-label high"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> High Severity</div>
+        <div class="action-severity-label high"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> High Severity<span class="severity-check" id="check-high">&#x2713;</span></div>
         {% for item in high_actions %}
         <div class="action-check-item" data-id="{{ item.id }}">
           <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
@@ -1044,12 +1064,13 @@
           </div>
         </div>
         {% endfor %}
+        <div class="severity-complete-banner" id="banner-high"></div>
       </div>
       {% endif %}
 
       {% if medium_actions %}
       <div class="action-severity-group">
-        <div class="action-severity-label medium"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Medium Severity</div>
+        <div class="action-severity-label medium"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Medium Severity<span class="severity-check" id="check-medium">&#x2713;</span></div>
         {% for item in medium_actions %}
         <div class="action-check-item" data-id="{{ item.id }}">
           <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
@@ -1071,12 +1092,13 @@
           </div>
         </div>
         {% endfor %}
+        <div class="severity-complete-banner" id="banner-medium"></div>
       </div>
       {% endif %}
 
       {% if low_actions %}
       <div class="action-severity-group">
-        <div class="action-severity-label low"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span> Low Severity</div>
+        <div class="action-severity-label low"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span> Low Severity<span class="severity-check" id="check-low">&#x2713;</span></div>
         {% for item in low_actions %}
         <div class="action-check-item" data-id="{{ item.id }}">
           <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
@@ -1098,9 +1120,11 @@
           </div>
         </div>
         {% endfor %}
+        <div class="severity-complete-banner" id="banner-low"></div>
       </div>
       {% endif %}
     </div>
+    {% endif %}
 
     <!-- Email Capture -->
     <div class="email-capture" id="email-capture">
@@ -1543,10 +1567,38 @@
         updateGrade();
         saveActionState();
         syncFindingCard(cb);
+        updateSeverityCompletion();
       });
     });
 
+    function updateSeverityCompletion() {
+      ['high', 'medium', 'low'].forEach(function(sev) {
+        var boxes = document.querySelectorAll('.action-checkbox[data-severity="' + sev + '"]');
+        if (boxes.length === 0) return;
+        var allDone = true;
+        var recovered = 0;
+        boxes.forEach(function(cb) {
+          if (!cb.checked) { allDone = false; }
+          else { recovered += parseInt(cb.getAttribute('data-loss'), 10) || 0; }
+        });
+        var banner = document.getElementById('banner-' + sev);
+        var check = document.getElementById('check-' + sev);
+        var label = sev.charAt(0).toUpperCase() + sev.slice(1);
+        if (allDone) {
+          if (banner) {
+            banner.textContent = '\u2713 All ' + label.toUpperCase() + ' priority leaks resolved \u2014 $' + recovered.toLocaleString() + '/month recovered';
+            banner.classList.add('visible');
+          }
+          if (check) check.classList.add('visible');
+        } else {
+          if (banner) { banner.classList.remove('visible'); banner.textContent = ''; }
+          if (check) check.classList.remove('visible');
+        }
+      });
+    }
+
     loadActionState();
+    updateSeverityCompletion();
 
     // ==================== Report ID + Persistent State ====================
     var reportDomain = '{{ url | replace("'", "\\'") }}'.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -1754,10 +1806,14 @@
           document.getElementById('email-form').style.display = 'none';
           document.getElementById('email-success').style.display = 'block';
         } else {
+          res.text().then(function(body) {
+            console.error('[EmailCapture] Server error:', res.status, body);
+          });
           btn.textContent = 'Send My Fix Plan';
           btn.disabled = false;
         }
-      }).catch(function() {
+      }).catch(function(err) {
+        console.error('[EmailCapture] Network/fetch error:', err);
         btn.textContent = 'Send My Fix Plan';
         btn.disabled = false;
       });

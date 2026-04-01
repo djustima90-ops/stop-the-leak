@@ -37,7 +37,15 @@ def extract_brand(url: str) -> dict:
     except Exception:
         return result
 
-    soup = BeautifulSoup(resp.text, "html.parser")
+    try:
+        return _parse_brand(resp.text, url, result)
+    except Exception:
+        return result
+
+
+def _parse_brand(html: str, url: str, result: dict) -> dict:
+    """Parse brand elements from HTML. Separated so caller can catch errors."""
+    soup = BeautifulSoup(html, "html.parser")
 
     # ── Logo extraction ──────────────────────────────────────────────
     logo_candidates = []
@@ -179,3 +187,4 @@ def extract_brand(url: str) -> dict:
     result["business_name"] = business_name
 
     return result
+

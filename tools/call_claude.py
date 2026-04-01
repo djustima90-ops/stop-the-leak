@@ -32,13 +32,33 @@ def call_claude(structured_content: dict, industry=None) -> str:
     else:
         prompt = prompt.replace("{industry_context}", "No industry-specific data available. Use general small business assumptions.")
 
-    client = anthropic.Anthropic()
-    message = client.messages.create(
-        model="claude-sonnet-4-5-20250929",
-        max_tokens=5000,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return message.content[0].text
+    try:
+        client = anthropic.Anthropic()
+        message = client.messages.create(
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=5000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text
+    except Exception as e:
+        print(f"[call_claude] Anthropic API error: {e}")
+        return (
+            "EXECUTIVE_SUMMARY:\n"
+            "The AI analysis service is temporarily unavailable. "
+            "Please try running the audit again in a few minutes.\n\n"
+            "LEAD_LEAKS:\n"
+            "FINDING: Analysis unavailable\n"
+            "SEVERITY: Low\n"
+            "IMPACT: Unable to complete audit at this time.\n"
+            "FIX: Please retry the audit.\n---\n\n"
+            "CONVERSION_LEAKS:\n---\n\n"
+            "FOLLOW_UP_LEAKS:\n---\n\n"
+            "PRIORITY_FIXES:\n"
+            "1. Retry the audit when the service is available\n\n"
+            "LEAK_COUNT:\n"
+            "Lead Leaks: 0\nConversion Leaks: 0\n"
+            "Follow-Up Leaks: 0\nTotal: 0"
+        )
 
 
 def _build_industry_context(industry: dict) -> str:

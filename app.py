@@ -200,7 +200,12 @@ def view_report(report_id):
         return "Invalid report ID", 400
     report_file = REPORTS_DIR / f"{report_id}.html"
     if not report_file.exists():
-        return "Report not found. Please run a new audit.", 404
+        return _error_page(
+            "Report expired.",
+            "This report is no longer available. Reports are temporary "
+            "and expire when the server recycles.",
+            details='<p style="color:#64748b;font-size:0.85rem;">Run a new audit to generate a fresh report.</p>',
+        ), 404
     return report_file.read_text(encoding="utf-8")
 
 

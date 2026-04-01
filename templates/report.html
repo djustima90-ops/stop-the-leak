@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leak Report — {{ business_name }}</title>
+  <title>Leak Report — {{ business_name | default('Unknown Business') }}</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1FA99;</text></svg>">
+  <!-- Google Analytics: replace UA-XXXXXXXX with your tracking ID when ready -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=UA-XXXXXXXX"></script> -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -728,6 +731,10 @@
       .content { padding: 1.5rem; }
       .header { padding: 1.5rem; }
       .filter-bar { flex-direction: column; }
+      .finding { padding: 1rem; }
+      .email-form { flex-direction: column; }
+      .email-form input[type="email"] { min-width: 0; width: 100%; }
+      .email-form button { width: 100%; }
       .revenue-banner .annual-loss { font-size: 2rem; }
       .header-compact { padding: 0.6rem 1.5rem; }
       .header-compact .score-ring { width: 50px; height: 50px; }
@@ -792,11 +799,11 @@
           {% if brand and brand.logo_url %}
           <img src="{{ brand.logo_url }}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #1e293b;">
           {% endif %}
-          {{ business_name }}
+          {{ business_name | default('Unknown Business') }}
         </h1>
         <p class="meta">
-          <a href="{{ url }}" target="_blank" rel="noopener">{{ url.split('//')[1].split('/')[0].split('?')[0] if '//' in url else url.split('/')[0].split('?')[0] }}</a>
-          &nbsp;&middot;&nbsp; {{ timestamp }}
+          <a href="{{ url | default('#') }}" target="_blank" rel="noopener">{{ url.split('//')[1].split('/')[0].split('?')[0] if '//' in (url | default('')) else (url | default('')).split('/')[0].split('?')[0] }}</a>
+          &nbsp;&middot;&nbsp; {{ timestamp | default('') }}
         </p>
       </div>
       <div class="header-right">
@@ -867,25 +874,25 @@
     <!-- Executive Summary -->
     <div class="summary-card">
       <h2>Executive Summary</h2>
-      <p>{{ executive_summary }}</p>
+      <p>{{ executive_summary | default('') }}</p>
     </div>
 
     <!-- Leak Counts -->
     <div class="leak-counts">
       <div class="count-box">
-        <div class="number" data-count="{{ leak_count.lead }}">0</div>
+        <div class="number" data-count="{{ leak_count.lead | default(0) }}">0</div>
         <div class="label">Lead Leaks</div>
       </div>
       <div class="count-box">
-        <div class="number" data-count="{{ leak_count.conversion }}">0</div>
+        <div class="number" data-count="{{ leak_count.conversion | default(0) }}">0</div>
         <div class="label">Conversion Leaks</div>
       </div>
       <div class="count-box">
-        <div class="number" data-count="{{ leak_count.follow_up }}">0</div>
+        <div class="number" data-count="{{ leak_count.follow_up | default(0) }}">0</div>
         <div class="label">Follow-Up Leaks</div>
       </div>
       <div class="count-box total">
-        <div class="number" data-count="{{ leak_count.total }}">0</div>
+        <div class="number" data-count="{{ leak_count.total | default(0) }}">0</div>
         <div class="label">Total Leaks</div>
       </div>
     </div>
@@ -921,7 +928,7 @@
       {% for item in lead_leaks %}
       <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
-          <span class="finding-text">{{ item.finding }}</span>
+          <span class="finding-text">{{ item.finding | default('') }}</span>
           <div class="finding-badges">
             {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
               <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
@@ -933,7 +940,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="finding-row"><strong>Impact:</strong> {{ item.impact }}</div>
+        <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
       </div>
       {% endfor %}
     </div>
@@ -947,7 +954,7 @@
       {% for item in conversion_leaks %}
       <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
-          <span class="finding-text">{{ item.finding }}</span>
+          <span class="finding-text">{{ item.finding | default('') }}</span>
           <div class="finding-badges">
             {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
               <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
@@ -959,7 +966,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="finding-row"><strong>Impact:</strong> {{ item.impact }}</div>
+        <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
       </div>
       {% endfor %}
     </div>
@@ -973,7 +980,7 @@
       {% for item in follow_up_leaks %}
       <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
-          <span class="finding-text">{{ item.finding }}</span>
+          <span class="finding-text">{{ item.finding | default('') }}</span>
           <div class="finding-badges">
             {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
               <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
@@ -985,7 +992,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="finding-row"><strong>Impact:</strong> {{ item.impact }}</div>
+        <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
       </div>
       {% endfor %}
     </div>
@@ -1274,7 +1281,7 @@
     var totalMonthlyLoss = {{ total_monthly_loss | default(0) }};
     var currentLeaking = totalMonthlyLoss;
     var currentSavings = 0;
-    var storageKey = 'stl-actions-' + '{{ url | replace("'", "\\'") }}';
+    var storageKey = 'stl-actions-' + '{{ (url | default('')) | replace("'", "\\'") }}';
 
     // Initial annual loss animation
     (function() {
@@ -1601,8 +1608,8 @@
     updateSeverityCompletion();
 
     // ==================== Report ID + Persistent State ====================
-    var reportDomain = '{{ url | replace("'", "\\'") }}'.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    var reportTimestamp = '{{ timestamp | replace("'", "\\'") }}'.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    var reportDomain = '{{ (url | default('')) | replace("'", "\\'") }}'.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    var reportTimestamp = '{{ (timestamp | default('')) | replace("'", "\\'") }}'.replace(/[^a-z0-9]/gi, '-').toLowerCase();
     var reportId = reportDomain + '-' + reportTimestamp;
     var reportStateKey = 'stl-report-' + reportId;
 
@@ -1794,9 +1801,9 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email,
-          business_name: '{{ business_name | replace("'", "\\'") }}',
-          url: '{{ url | replace("'", "\\'") }}',
-          domain: '{{ url | replace("'", "\\'") }}'.replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+          business_name: '{{ (business_name | default('Unknown Business')) | replace("'", "\\'") }}',
+          url: '{{ (url | default('')) | replace("'", "\\'") }}',
+          domain: '{{ (url | default('')) | replace("'", "\\'") }}'.replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
           monthly_loss: totalMonthlyLoss,
           annual_loss: totalMonthlyLoss * 12,
           top_leaks: topLeaks

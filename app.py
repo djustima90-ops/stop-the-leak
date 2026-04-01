@@ -1,6 +1,7 @@
 """Stop the Leak — Flask app tying the audit pipeline together."""
 
 import csv
+import ipaddress
 import os
 import uuid
 from datetime import datetime
@@ -11,7 +12,7 @@ import requests as http_requests
 import resend
 from dotenv import load_dotenv
 
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import Flask, jsonify, redirect, render_template, request, send_from_directory, url_for
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -85,6 +86,40 @@ def audit():
                 url = "https://" + url
             else:
                 url = "https://" + url
+
+        # Input validation
+        if len(url) > 500:
+            return _error_page(
+                "That URL doesn't look like a public website.",
+                "Please enter a valid business URL.",
+            ), 400
+
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return _error_page(
+                "That URL doesn't look like a public website.",
+                "Please enter a valid business URL.",
+            ), 400
+
+        hostname = parsed.hostname or ""
+        if hostname in ("localhost", "127.0.0.1", "0.0.0.0", ""):
+            return _error_page(
+                "That URL doesn't look like a public website.",
+                "Please enter a valid business URL.",
+            ), 400
+
+        try:
+            ip = ipaddress.ip_address(hostname)
+            if ip.is_private or ip.is_loopback or ip.is_reserved:
+                return _error_page(
+                    "That URL doesn't look like a public website.",
+                    "Please enter a valid business URL.",
+                ), 400
+        except ValueError:
+            pass  # hostname is not an IP — that's fine
+
+        # Strip query parameters and fragments
+        url = parsed._replace(query="", fragment="").geturl()
 
         # Try https first, fall back to http
         try:
@@ -348,6 +383,12 @@ def health():
 def website():
     """Serve the marketing landing page."""
     return render_template("website/index.html")
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    """Serve the sitemap."""
+    return send_from_directory("static", "sitemap.xml", mimetype="application/xml")
 
 
 if __name__ == "__main__":

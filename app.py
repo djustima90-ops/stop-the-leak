@@ -136,8 +136,15 @@ def audit():
             html = scrape_site(url)
         except (ConnectionError, http_requests.exceptions.ConnectionError,
                 http_requests.exceptions.Timeout,
-                http_requests.exceptions.MissingSchema) as e:
+                http_requests.exceptions.MissingSchema,
+                http_requests.exceptions.HTTPError) as e:
             print(f"[Audit] Scrape failed for {url}: {e}")
+            if "403" in str(e):
+                return _error_page(
+                    "Access Blocked",
+                    "This website is blocking automated access. "
+                    "Many sites do this to prevent scraping. Try a different URL.",
+                ), 403
             return _error_page(
                 "We couldn't reach that website.",
                 "This usually means:",

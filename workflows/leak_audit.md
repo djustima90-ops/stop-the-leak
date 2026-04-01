@@ -6,6 +6,20 @@ Analyze the following website content and evaluate every check listed below. Be 
 
 ---
 
+## REVENUE BENCHMARK SOURCES (cite these when generating estimates)
+
+- AICPA MAP Survey 2025 (accounting firms)
+- BLS Occupational Outlook Handbook 2024 (healthcare, legal, trades)
+- PartsTech 2025 State of General Auto Repair Report (auto repair)
+- Health & Fitness Association Global Report 2025 (gyms/fitness)
+- US Census Bureau Quarterly Services Survey 2025 (restaurants, retail, services)
+- IBISWorld Industry Reports 2025 (hospitality, real estate)
+- Unbounce Conversion Benchmark Report Q4 2024 (conversion rates)
+- First Page Sage B2B Conversion Rates 2024 (B2B industries)
+- HubSpot Sales Trends Report 2024 (follow-up statistics)
+
+---
+
 ## WEBSITE CONTENT
 
 {site_content}
@@ -56,6 +70,15 @@ Use the industry data above to calculate loss estimates:
 - Use the Language Style guidance to frame findings in terms the business owner will understand
 - Incorporate the Local Context to make findings feel relevant and specific
 
+When generating dollar estimates you MUST:
+1. Use the industry's typical_monthly_revenue as the baseline
+2. Apply the loss_multiplier for each severity level
+3. Express estimates as ranges not exact figures (e.g., "$800–$1,200/month")
+4. Never exceed 25% of monthly revenue for a single finding
+5. Never exceed 50% of annual revenue for total losses
+6. Always use "estimated" or "potential" language — never claim certainty
+7. Cite the data source type (e.g., "Based on BLS benchmarks for this industry")
+
 At the end, sum all individual MONTHLY_LOSS_ESTIMATE values to produce a TOTAL_MONTHLY_LOSS.
 
 ---
@@ -68,11 +91,16 @@ IMPORTANT: Individual finding estimates must NOT exceed these maximums. Match th
 |---|---|---|---|---|
 | Restaurant/Cafe | $45K/month | $1,200/month | $500/month | $150/month |
 | Contractor/Home Services | $38K/month | $1,500/month | $700/month | $200/month |
+| Auto Repair Shop | $62K/month | $9,300/month | $4,960/month | $1,550/month |
 | Salon/Barbershop | $18K/month | $800/month | $350/month | $100/month |
 | Medical/Dental | $65K/month | $2,000/month | $900/month | $250/month |
 | Retail | $32K/month | $1,000/month | $450/month | $130/month |
 | Law/CPA | $35K/month | $1,800/month | $800/month | $200/month |
-| Gym/Fitness | $20K/month | $900/month | $400/month | $120/month |
+| Tax/Accounting | $18K/month | $1,800/month | $900/month | $360/month |
+| Real Estate Agent | $9K/month | $1,620/month | $810/month | $270/month |
+| Gym/Fitness | $33K/month | $5,280/month | $2,640/month | $825/month |
+| Plumbing/HVAC/Electrical | $43K/month | $7,310/month | $3,870/month | $1,290/month |
+| Mental Health/Therapy | $15K/month | $2,100/month | $1,050/month | $330/month |
 | Default (other) | $30K/month | $1,000/month | $450/month | $130/month |
 
 HARD RULE: Total annual loss (TOTAL_MONTHLY_LOSS x 12) should never exceed $80,000/year unless the business clearly supports higher revenue based on visible evidence (multiple locations, premium pricing, enterprise services).

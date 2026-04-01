@@ -3,6 +3,8 @@
     "name": "Restaurant / Cafe",
     "typical_monthly_revenue": 45000,
     "typical_annual_revenue": 540000,
+    "revenue_range": "$40,000–$50,000/month",
+    "revenue_source": "US Census Bureau QSS 2025",
     "keywords": ["restaurant", "cafe", "diner", "pizza", "sushi", "bar", "grill", "bistro", "eatery", "food", "menu", "dining", "takeout", "delivery", "breakfast", "lunch", "dinner"],
     "top_leak_patterns": [
       "No online reservation or ordering system — losing 18% of potential covers",
@@ -32,19 +34,23 @@
     "local_context": "Western MA contractors face strong seasonal demand — heating season in fall/winter and renovation season in spring/summer — missing online leads during peak periods is especially costly"
   },
   "auto_repair": {
-    "name": "Auto Repair / Detailing",
-    "typical_monthly_revenue": 28000,
-    "typical_annual_revenue": 336000,
-    "keywords": ["auto", "car", "vehicle", "repair", "mechanic", "oil change", "tire", "brake", "transmission", "detailing", "body shop", "collision", "inspection"],
+    "name": "Auto Repair Shop",
+    "typical_monthly_revenue": 62000,
+    "typical_annual_revenue": 744000,
+    "revenue_range": "$42,000–$85,000/month",
+    "revenue_source": "PartsTech 2025 State of General Auto Repair Report",
+    "keywords": ["auto repair", "mechanic", "car repair", "automotive", "oil change", "brake", "transmission", "tire", "garage", "service center"],
+    "avg_client_value": 620,
+    "conversion_rate_benchmark": 3.1,
     "top_leak_patterns": [
       "No online appointment booking — customers will call a competitor who has it",
-      "No visible pricing for common services like oil changes",
-      "No Google reviews integration or social proof"
+      "No service menu with pricing — customers want transparency before committing",
+      "No trust signals like certifications or warranties visible"
     ],
-    "language_style": "straight-talking and trust-focused — auto shop owners are practical people who understand that reputation is everything in a small town",
-    "high_loss_multiplier": 0.09,
-    "medium_loss_multiplier": 0.04,
-    "low_loss_multiplier": 0.015,
+    "language_style": "practical, trust-focused, local",
+    "high_loss_multiplier": 0.15,
+    "medium_loss_multiplier": 0.08,
+    "low_loss_multiplier": 0.025,
     "local_context": "In the Berkshires, word-of-mouth drives auto repair business but an online presence captures the tourist traffic and new residents who don't yet have a trusted mechanic"
   },
   "salon_barbershop": {
@@ -67,6 +73,8 @@
     "name": "Dental / Medical / Chiropractic",
     "typical_monthly_revenue": 65000,
     "typical_annual_revenue": 780000,
+    "revenue_range": "$55,000–$75,000/month",
+    "revenue_source": "BLS Occupational Outlook 2024",
     "keywords": ["dentist", "dental", "doctor", "medical", "clinic", "chiropractic", "chiropractor", "physical therapy", "orthodontist", "optometrist", "physician", "healthcare", "health", "wellness", "therapy"],
     "top_leak_patterns": [
       "No online appointment request form — patients default to whoever makes booking easiest",
@@ -112,35 +120,43 @@
     "local_context": "Western MA legal market is relationship-driven but increasingly competitive online — residents searching for attorneys start with Google, and the first firm with a clear intake process wins the client"
   },
   "real_estate": {
-    "name": "Real Estate / Property Management",
-    "typical_monthly_revenue": 42000,
-    "typical_annual_revenue": 504000,
-    "keywords": ["real estate", "realtor", "property", "homes", "houses", "rental", "apartment", "broker", "listing", "mortgage", "realty"],
+    "name": "Real Estate Agent/Brokerage",
+    "typical_monthly_revenue": 9000,
+    "typical_annual_revenue": 108000,
+    "revenue_range": "$7,000–$12,000/month",
+    "revenue_source": "BLS Occupational Outlook 2024, ZipRecruiter 2025",
+    "keywords": ["real estate", "realtor", "realty", "broker", "homes for sale", "property", "listings", "mls"],
+    "avg_client_value": 8500,
+    "conversion_rate_benchmark": 2.4,
     "top_leak_patterns": [
-      "No IDX property search or featured listings on homepage",
-      "No lead capture for buyer/seller inquiries",
-      "No neighborhood or market data to establish local expertise"
+      "No lead capture form for buyer/seller inquiries",
+      "No property search or IDX integration",
+      "No testimonials or recent sales proof"
     ],
-    "language_style": "market-savvy and relationship-oriented — agents think in transactions and commission, connect online presence to listing appointments and buyer consultations",
-    "high_loss_multiplier": 0.08,
-    "medium_loss_multiplier": 0.04,
-    "low_loss_multiplier": 0.015,
+    "language_style": "professional, trust-focused, results-driven",
+    "high_loss_multiplier": 0.18,
+    "medium_loss_multiplier": 0.09,
+    "low_loss_multiplier": 0.03,
     "local_context": "Berkshires real estate is driven by second-home buyers from NYC and Boston — these buyers research extensively online before contacting an agent, making web presence critical for capturing high-value leads"
   },
   "fitness": {
-    "name": "Fitness / Gym / Yoga",
-    "typical_monthly_revenue": 15000,
-    "typical_annual_revenue": 180000,
-    "keywords": ["gym", "fitness", "yoga", "pilates", "crossfit", "personal training", "trainer", "workout", "exercise", "martial arts", "dance", "studio"],
+    "name": "Gym / Fitness Studio",
+    "typical_monthly_revenue": 33000,
+    "typical_annual_revenue": 396000,
+    "revenue_range": "$25,000–$45,000/month",
+    "revenue_source": "Health & Fitness Association Global Report 2025, Statista 2023",
+    "keywords": ["gym", "fitness", "yoga", "pilates", "crossfit", "personal training", "studio", "workout", "health club", "bootcamp", "spin", "martial arts"],
+    "avg_client_value": 65,
+    "conversion_rate_benchmark": 4.2,
     "top_leak_patterns": [
-      "No class schedule or online booking visible",
-      "No free trial or first-class-free offer",
-      "No member testimonials or transformation stories"
+      "No online class booking or schedule",
+      "No free trial or intro offer capture",
+      "No member testimonials or transformation photos"
     ],
-    "language_style": "energetic and community-focused — fitness studio owners think in memberships and retention, connect online presence to trial-to-member conversion",
-    "high_loss_multiplier": 0.10,
-    "medium_loss_multiplier": 0.05,
-    "low_loss_multiplier": 0.02,
+    "language_style": "energetic, motivational, community-focused",
+    "high_loss_multiplier": 0.16,
+    "medium_loss_multiplier": 0.08,
+    "low_loss_multiplier": 0.025,
     "local_context": "Berkshires fitness studios compete for a health-conscious community that values local, boutique experiences — a strong online presence differentiates from chain gyms"
   },
   "lodging": {
@@ -206,6 +222,26 @@
     "medium_loss_multiplier": 0.04,
     "low_loss_multiplier": 0.015,
     "local_context": "Financial services clients represent significant lifetime value — a single missed prospect can mean tens of thousands in lost recurring revenue over the relationship"
+  },
+  "tax_accounting": {
+    "name": "Tax / Accounting Firm",
+    "typical_monthly_revenue": 18000,
+    "typical_annual_revenue": 216000,
+    "revenue_range": "$13,000–$25,000/month",
+    "revenue_source": "AICPA MAP Survey 2025",
+    "keywords": ["tax", "accounting", "CPA", "bookkeeping", "tax preparation", "tax filing", "accountant", "payroll", "audit", "tax planning"],
+    "avg_client_value": 1200,
+    "conversion_rate_benchmark": 3.0,
+    "top_leak_patterns": [
+      "No online intake or consultation booking form — clients go to whoever responds first during tax season",
+      "No clear list of services with pricing tiers — prospects can't self-qualify",
+      "No credentials, certifications, or client testimonials visible — trust is everything in financial services"
+    ],
+    "language_style": "professional and trust-centered — accountants think in client lifetime value and referral rates, frame findings around qualified lead acquisition",
+    "high_loss_multiplier": 0.10,
+    "medium_loss_multiplier": 0.05,
+    "low_loss_multiplier": 0.02,
+    "local_context": "Tax and accounting firms face extreme seasonality — capturing leads during tax season is critical, and a website that doesn't convert during January-April loses a disproportionate share of annual revenue"
   },
   "marketing_agency": {
     "name": "Marketing / Digital Agency",
@@ -318,6 +354,46 @@
     "medium_loss_multiplier": 0.045,
     "low_loss_multiplier": 0.02,
     "local_context": "Moving and storage businesses are highly commoditized — the company that responds fastest with a clear quote wins the job, making website speed-to-lead the single biggest differentiator"
+  },
+  "plumbing_hvac": {
+    "name": "Plumbing / HVAC / Electrical",
+    "typical_monthly_revenue": 43000,
+    "typical_annual_revenue": 516000,
+    "revenue_range": "$35,000–$55,000/month",
+    "revenue_source": "BLS Occupational Outlook 2024, IBISWorld 2025",
+    "keywords": ["plumber", "plumbing", "hvac", "heating", "cooling", "air conditioning", "electrician", "electrical", "furnace", "ac repair", "drain"],
+    "avg_client_value": 850,
+    "conversion_rate_benchmark": 3.5,
+    "top_leak_patterns": [
+      "No emergency/24-7 contact prominently displayed",
+      "No online booking or quote request form",
+      "No service area map or coverage details"
+    ],
+    "language_style": "urgent, reliable, local-focused",
+    "high_loss_multiplier": 0.17,
+    "medium_loss_multiplier": 0.09,
+    "low_loss_multiplier": 0.03,
+    "local_context": "Western MA trades face strong seasonal demand — heating season in fall/winter and renovation season in spring/summer — missing online leads during peak periods is especially costly"
+  },
+  "mental_health_therapy": {
+    "name": "Mental Health / Therapy Practice",
+    "typical_monthly_revenue": 15000,
+    "typical_annual_revenue": 180000,
+    "revenue_range": "$12,000–$20,000/month",
+    "revenue_source": "BLS Occupational Outlook 2024, industry estimates",
+    "keywords": ["therapist", "therapy", "counseling", "counselor", "psychologist", "mental health", "anxiety", "depression", "life coach", "psychiatrist", "behavioral health"],
+    "avg_client_value": 280,
+    "conversion_rate_benchmark": 3.2,
+    "top_leak_patterns": [
+      "No insurance accepted list or pricing transparency",
+      "No online booking for consultations",
+      "No clear specializations or approach explained"
+    ],
+    "language_style": "warm, empathetic, professional, safe",
+    "high_loss_multiplier": 0.14,
+    "medium_loss_multiplier": 0.07,
+    "low_loss_multiplier": 0.022,
+    "local_context": "Mental health practices depend on trust and approachability — a website that clearly communicates specializations, insurance, and booking reduces the barrier for people already hesitant to seek help"
   },
   "default": {
     "name": "Local Business",

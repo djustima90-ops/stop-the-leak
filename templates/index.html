@@ -359,6 +359,7 @@
       color: #fff;
       line-height: 1.4;
       margin-bottom: 0.3rem;
+      transition: opacity 0.5s ease;
     }
     .loading-status .fact-support {
       font-size: 0.9rem;
@@ -366,6 +367,7 @@
       color: #94a3b8;
       font-style: italic;
       line-height: 1.4;
+      transition: opacity 0.5s ease;
     }
 
     /* Progress bar */
@@ -532,100 +534,112 @@
   </div>
 
   <script>
-    var form = document.getElementById('audit-form');
-    var overlay = document.getElementById('loading-overlay');
-    var statusEl = document.getElementById('loading-status');
-    var fillEl = document.getElementById('progress-fill');
-    var percentEl = document.getElementById('progress-percent');
-    var urlTextEl = document.getElementById('loading-url-text');
+    const form = document.getElementById('audit-form');
+    const overlay = document.getElementById('loading-overlay');
+    const fillEl = document.getElementById('progress-fill');
+    const percentEl = document.getElementById('progress-percent');
+    const urlTextEl = document.getElementById('loading-url-text');
 
-    var facts = [
-      ['The average business takes 47 hours to respond to a new lead.', 'By then, they\u2019ve already called 3 competitors.'],
-      ['97% of website visitors leave without taking action.', 'Most businesses never find out why.'],
-      ['Adding a click-to-call phone number increases leads by 30%.', 'Most local business sites still don\u2019t have one.'],
-      ['80% of sales require at least 5 follow-ups.', 'Most businesses stop after 1.'],
-      ['A 1-second delay in page load time reduces conversions by 7%.', 'Speed is silent revenue.'],
-      ['Businesses that respond to leads within 5 minutes are 10x more likely to close.', 'Your website response time starts the clock.'],
-      ['Adding online ordering to a restaurant increases revenue by 18% on average.', 'The menu is there. The system isn\u2019t.'],
-      ['Reducing a contact form from 11 fields to 4 doubles conversion rates.', 'Friction is expensive.']
+    const facts = [
+      ["47 hours", "That's how long the average business takes to respond to a new lead.", "By then, the prospect has already called 3 competitors."],
+      ["97%", "of website visitors leave without taking action.", "Most businesses never find out why."],
+      ["30%", "more leads from a click-to-call phone number.", "Most local business sites still don't have one."],
+      ["80%", "of sales require at least 5 follow-ups.", "Most businesses stop after 1."],
+      ["7%", "drop in conversions per second of page load delay.", "Speed is silent revenue."],
+      ["10x", "more likely to close if you respond within 5 minutes.", "Your website response time starts the clock."],
+      ["18%", "average revenue increase from adding online ordering.", "The menu is there. The system isn't."],
+      ["2x", "conversion rate improvement from reducing forms to 5 fields.", "Friction is expensive."]
     ];
 
-    var factStatEl = document.getElementById('fact-stat');
-    var factSupportEl = document.getElementById('fact-support');
-    var factCycleActive = false;
+    let factIndex = 0;
+    let factTimeout = null;
+    let factCycleActive = false;
+
+    function stopFactCycle() {
+      factCycleActive = false;
+      if (factTimeout) {
+        clearTimeout(factTimeout);
+        factTimeout = null;
+      }
+    }
 
     function showFact(index) {
-      // Clear previous content completely before setting new text
-      factStatEl.textContent = '';
-      factSupportEl.textContent = '';
-      factStatEl.textContent = facts[index][0];
-      factSupportEl.textContent = facts[index][1];
+      const statEl = document.getElementById('fact-stat');
+      const supportEl = document.getElementById('fact-support');
+      if (!statEl || !supportEl) return;
+
+      // Fade out
+      statEl.style.opacity = '0';
+      supportEl.style.opacity = '0';
+
+      factTimeout = setTimeout(() => {
+        if (!factCycleActive) return;
+        // Set new content only after fully faded
+        statEl.textContent = facts[index][0] + ' \u2014 ' + facts[index][1];
+        supportEl.textContent = facts[index][2];
+
+        // Fade in
+        statEl.style.opacity = '1';
+        supportEl.style.opacity = '1';
+
+        // Schedule next fact
+        factTimeout = setTimeout(() => {
+          if (!factCycleActive) return;
+          factIndex = (factIndex + 1) % facts.length;
+          showFact(factIndex);
+        }, 6000);
+      }, 500);
     }
 
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
-      var urlVal = document.getElementById('url').value.trim();
+      const urlVal = document.getElementById('url').value.trim();
       urlTextEl.textContent = urlVal;
       overlay.classList.add('active');
 
-      // Show first fact immediately
-      var factIndex = 0;
-      showFact(factIndex);
-      statusEl.style.opacity = '1';
+      // Start fact cycling
       factCycleActive = true;
+      factIndex = 0;
+      showFact(factIndex);
 
       // Progress bar: 0 to 99 over 60 seconds
-      var duration = 60000;
-      var startTime = Date.now();
-      var progressStopped = false;
+      const duration = 60000;
+      const startTime = Date.now();
+      let progressStopped = false;
 
       function updateProgress() {
         if (progressStopped) return;
-        var elapsed = Date.now() - startTime;
-        var pct = Math.min(Math.round((elapsed / duration) * 100), 99);
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min(Math.round((elapsed / duration) * 100), 99);
         fillEl.style.width = pct + '%';
         percentEl.textContent = pct + '%';
         if (pct < 99) requestAnimationFrame(updateProgress);
       }
       requestAnimationFrame(updateProgress);
 
-      // Cycle facts every 6 seconds: fade out fully, swap text, fade back in
-      var msgTimer = setInterval(function() {
-        if (!factCycleActive) return;
-        statusEl.style.opacity = '0';
-        // Wait for the CSS opacity transition (500ms) to complete before swapping
-        setTimeout(function() {
-          if (!factCycleActive) return;
-          factIndex = (factIndex + 1) % facts.length;
-          showFact(factIndex);
-          statusEl.style.opacity = '1';
-        }, 550);
-      }, 6000);
-
       // Submit via fetch so we can detect completion
-      var formData = new FormData(form);
+      const formData = new FormData(form);
       fetch(form.action, {
         method: 'POST',
         body: formData
       }).then(function(response) {
         progressStopped = true;
-        factCycleActive = false;
-        clearInterval(msgTimer);
+        stopFactCycle();
+
+        const statEl = document.getElementById('fact-stat');
+        const supportEl = document.getElementById('fact-support');
 
         // Snap to 100%
         fillEl.style.width = '100%';
         percentEl.textContent = '100%';
-        // Clear fact elements and show completion message
-        factStatEl.textContent = '';
-        factSupportEl.textContent = '';
-        factStatEl.textContent = 'Report ready!';
-        statusEl.style.opacity = '1';
+        // Show completion message
+        if (statEl) { statEl.textContent = 'Report ready!'; statEl.style.opacity = '1'; }
+        if (supportEl) { supportEl.textContent = ''; supportEl.style.opacity = '1'; }
 
         return response.text().then(function(html) {
           // Brief pause to show "Report ready!" then navigate
           setTimeout(function() {
-            // Redirect to the report URL (server now redirects to /report/<id>)
             if (response.redirected && response.url) {
               window.location.href = response.url;
             } else {
@@ -637,13 +651,13 @@
         });
       }).catch(function(err) {
         progressStopped = true;
-        factCycleActive = false;
-        clearInterval(msgTimer);
+        stopFactCycle();
         console.error('[Audit] Request failed:', err);
-        factStatEl.textContent = '';
-        factSupportEl.textContent = '';
-        factStatEl.textContent = 'Something went wrong. Please try again.';
-        statusEl.style.opacity = '1';
+
+        const statEl = document.getElementById('fact-stat');
+        const supportEl = document.getElementById('fact-support');
+        if (statEl) { statEl.textContent = 'Something went wrong. Please try again.'; statEl.style.opacity = '1'; }
+        if (supportEl) { supportEl.textContent = ''; supportEl.style.opacity = '1'; }
         fillEl.style.width = '0%';
         percentEl.textContent = '';
         setTimeout(function() {

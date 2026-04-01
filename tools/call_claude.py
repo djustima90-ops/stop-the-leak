@@ -11,6 +11,42 @@ load_dotenv()
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "workflows" / "leak_audit.md"
 
 
+def _fallback_analysis() -> str:
+    """Return a valid fallback analysis string when the API fails."""
+    return (
+        "EXECUTIVE_SUMMARY:\n"
+        "The AI analysis service is temporarily unavailable. "
+        "Please try running the audit again in a few minutes.\n\n"
+        "LEAD_LEAKS:\n"
+        "FINDING: Analysis unavailable — please retry\n"
+        "SEVERITY: Low\n"
+        "IMPACT: Unable to complete audit at this time.\n"
+        "FIX: Please retry the audit.\n"
+        "MONTHLY_LOSS_ESTIMATE: $0\n"
+        "---\n\n"
+        "CONVERSION_LEAKS:\n"
+        "FINDING: Analysis unavailable — please retry\n"
+        "SEVERITY: Low\n"
+        "IMPACT: Unable to complete audit at this time.\n"
+        "FIX: Please retry the audit.\n"
+        "MONTHLY_LOSS_ESTIMATE: $0\n"
+        "---\n\n"
+        "FOLLOW_UP_LEAKS:\n"
+        "FINDING: Analysis unavailable — please retry\n"
+        "SEVERITY: Low\n"
+        "IMPACT: Unable to complete audit at this time.\n"
+        "FIX: Please retry the audit.\n"
+        "MONTHLY_LOSS_ESTIMATE: $0\n"
+        "---\n\n"
+        "PRIORITY_FIXES:\n"
+        "1. Retry the audit when the service is available\n\n"
+        "LEAK_COUNT:\n"
+        "Lead Leaks: 1\nConversion Leaks: 1\n"
+        "Follow-Up Leaks: 1\nTotal: 3\n\n"
+        "TOTAL_MONTHLY_LOSS: $0"
+    )
+
+
 def call_claude(structured_content: dict, industry=None) -> str:
     """Send site content to Claude and return the audit analysis.
 
@@ -39,26 +75,17 @@ def call_claude(structured_content: dict, industry=None) -> str:
             max_tokens=5000,
             messages=[{"role": "user", "content": prompt}],
         )
-        return message.content[0].text
+        if not message.content:
+            print("[call_claude] Empty response from API (no content blocks)")
+            return _fallback_analysis()
+        text = message.content[0].text
+        if not text or not text.strip():
+            print("[call_claude] Empty text in API response")
+            return _fallback_analysis()
+        return text
     except Exception as e:
-        print(f"[call_claude] Anthropic API error: {e}")
-        return (
-            "EXECUTIVE_SUMMARY:\n"
-            "The AI analysis service is temporarily unavailable. "
-            "Please try running the audit again in a few minutes.\n\n"
-            "LEAD_LEAKS:\n"
-            "FINDING: Analysis unavailable\n"
-            "SEVERITY: Low\n"
-            "IMPACT: Unable to complete audit at this time.\n"
-            "FIX: Please retry the audit.\n---\n\n"
-            "CONVERSION_LEAKS:\n---\n\n"
-            "FOLLOW_UP_LEAKS:\n---\n\n"
-            "PRIORITY_FIXES:\n"
-            "1. Retry the audit when the service is available\n\n"
-            "LEAK_COUNT:\n"
-            "Lead Leaks: 0\nConversion Leaks: 0\n"
-            "Follow-Up Leaks: 0\nTotal: 0"
-        )
+        print(f"[call_claude] Anthropic API error: {type(e).__name__}: {e}")
+        return _fallback_analysis()
 
 
 def _build_industry_context(industry: dict) -> str:

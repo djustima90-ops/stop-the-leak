@@ -997,7 +997,7 @@
       <a class="back-link" href="/" style="margin-bottom:0">&larr; Back to Home</a>
       <div style="display:flex;align-items:center;gap:0.8rem;">
         <span class="last-saved-indicator" id="last-saved" style="font-size:0.75rem;color:#64748b;display:none;">Last saved: <span id="last-saved-time">--</span></span>
-        <button class="save-share-btn" id="save-share-btn" style="padding:0.5rem 1.2rem;background:transparent;color:#94a3b8;border:1px solid #1e293b;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;">Save &amp; Share</button>
+        <button class="save-share-btn" id="save-share-btn" style="padding:0.5rem 1.2rem;background:transparent;color:#94a3b8;border:1px solid #1e293b;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;display:none;">Save &amp; Share</button>
       </div>
     </div>
 
@@ -1035,11 +1035,30 @@
       </div>
     </div>
 
-    <!-- Free Finding Previews (first 3 always visible) -->
+    <!-- Pick 1 finding per severity: high, medium, low -->
     {% set all_findings = lead_leaks + conversion_leaks + follow_up_leaks %}
-    {% set free_limit = 3 %}
-    {% set free_findings = all_findings[:free_limit] %}
+    {% set ns = namespace(free_high=none, free_med=none, free_low=none, free_loss=0) %}
+    {% for item in all_findings %}
+      {% if ns.free_high is none and item.severity | lower == 'high' %}
+        {% set ns.free_high = item %}
+      {% elif ns.free_med is none and item.severity | lower == 'medium' %}
+        {% set ns.free_med = item %}
+      {% elif ns.free_low is none and item.severity | lower == 'low' %}
+        {% set ns.free_low = item %}
+      {% endif %}
+    {% endfor %}
+    {% set free_findings = [] %}
+    {% if ns.free_high %}{% if free_findings.append(ns.free_high) %}{% endif %}{% set ns.free_loss = ns.free_loss + (ns.free_high.monthly_loss | default(0)) %}{% endif %}
+    {% if ns.free_med %}{% if free_findings.append(ns.free_med) %}{% endif %}{% set ns.free_loss = ns.free_loss + (ns.free_med.monthly_loss | default(0)) %}{% endif %}
+    {% if ns.free_low %}{% if free_findings.append(ns.free_low) %}{% endif %}{% set ns.free_loss = ns.free_loss + (ns.free_low.monthly_loss | default(0)) %}{% endif %}
     {% set gated_count = all_findings | length - free_findings | length %}
+    {% set remaining_loss = (total_monthly_loss | default(0)) - ns.free_loss %}
+    {% set cat_count = [] %}
+    {% if lead_leaks %}{% if cat_count.append(1) %}{% endif %}{% endif %}
+    {% if conversion_leaks %}{% if cat_count.append(1) %}{% endif %}{% endif %}
+    {% if follow_up_leaks %}{% if cat_count.append(1) %}{% endif %}{% endif %}
+
+    <!-- Free Findings (1 per severity) -->
     {% if free_findings %}
       <div class="section">
         <h2 class="section-title" style="margin-bottom:1rem;">
@@ -1065,19 +1084,33 @@
         </div>
         {% endfor %}
         {% if gated_count > 0 %}
-        <p class="teaser-line" id="teaser-line">Plus {{ gated_count }} more leak{{ 's' if gated_count != 1 else '' }} identified...</p>
+        <p class="teaser-line" id="teaser-line">Plus {{ gated_count }} more leak{{ 's' if gated_count != 1 else '' }} identified across {{ cat_count | length }} categor{{ 'ies' if cat_count | length != 1 else 'y' }}</p>
         {% endif %}
+      </div>
+
+      <!-- Quick Wins Preview -->
+      <div class="priorities" style="opacity:0.92;">
+        <h2>Quick Wins &mdash; 3 Things To Fix First</h2>
+        <p class="priorities-sub">A preview of your action plan</p>
+        {% for item in free_findings %}
+        {% if item.fix %}
+        <div class="priority-item">
+          <div class="priority-num">{{ loop.index }}</div>
+          <div class="priority-text">{{ item.fix }}</div>
+        </div>
+        {% endif %}
+        {% endfor %}
       </div>
     {% endif %}
 
     <!-- Unlock Card (shown when gated) -->
     <div class="unlock-card" id="unlock-card"{% if gated_count == 0 %} style="display:none;"{% endif %}>
-      <h3 id="unlock-headline">Your website is leaking {{ gated_count }} more revenue source{{ 's' if gated_count != 1 else '' }}.</h3>
-      <p class="unlock-sub">Enter your email to unlock the full report &mdash; free.</p>
+      <h3 id="unlock-headline">You're seeing {{ free_findings | length }} of {{ all_findings | length }} leaks.</h3>
+      <p class="unlock-sub">The other {{ gated_count }} are costing you an estimated ${{ remaining_loss | default(0) }}/month.</p>
       <ul class="unlock-benefits" id="unlock-benefits">
-        <li><span class="benefit-check">&#x2713;</span> See all {{ gated_count }} leak{{ 's' if gated_count != 1 else '' }} with exact dollar amounts</li>
-        <li><span class="benefit-check">&#x2713;</span> Get a prioritized action plan to fix them</li>
-        <li><span class="benefit-check">&#x2713;</span> Know exactly where to start</li>
+        <li><span class="benefit-check">&#x2713;</span> See all {{ gated_count }} remaining leak{{ 's' if gated_count != 1 else '' }} with exact dollar amounts</li>
+        <li><span class="benefit-check">&#x2713;</span> Get your full prioritized fix checklist</li>
+        <li><span class="benefit-check">&#x2713;</span> Know the exact order to fix them for maximum revenue recovery</li>
       </ul>
       <form class="unlock-email-form" id="unlock-email-form" onsubmit="return false;">
         <input type="email" id="unlock-email-input" placeholder="you@company.com" required>
@@ -2004,6 +2037,7 @@
         unlockCard.style.display = 'none';
         if (teaserLine) teaserLine.style.display = 'none';
         gatedContent.classList.add('unlocked');
+        var ssb = document.getElementById('save-share-btn'); if (ssb) ssb.style.display = '';
       }
 
       // Check if already unlocked
@@ -2085,6 +2119,7 @@
           var uc = document.getElementById('unlock-card'); if (uc) uc.style.display = 'none';
           var tl = document.getElementById('teaser-line'); if (tl) tl.style.display = 'none';
           var gc = document.getElementById('gated-content'); if (gc) gc.classList.add('unlocked');
+          var ssb = document.getElementById('save-share-btn'); if (ssb) ssb.style.display = '';
         } else {
           res.text().then(function(body) {
             console.error('[EmailCapture] Server error:', res.status, body);

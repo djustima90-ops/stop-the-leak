@@ -1035,43 +1035,47 @@
       </div>
     </div>
 
-    <!-- First Finding Preview (always visible) -->
+    <!-- Free Finding Previews (first 3 always visible) -->
     {% set all_findings = lead_leaks + conversion_leaks + follow_up_leaks %}
-    {% if all_findings %}
-      {% set first = all_findings[0] %}
+    {% set free_limit = 3 %}
+    {% set free_findings = all_findings[:free_limit] %}
+    {% set gated_count = all_findings | length - free_findings | length %}
+    {% if free_findings %}
       <div class="section">
         <h2 class="section-title" style="margin-bottom:1rem;">
-          <span class="section-title-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">1</span>
-          Top Finding
+          <span class="section-title-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">!</span>
+          Top Findings
         </h2>
-        <div class="finding finding-card" data-severity="{{ first.severity | lower }}" data-loss="{{ first.monthly_loss | default(0) }}">
+        {% for item in free_findings %}
+        <div class="finding finding-card" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
           <div class="finding-header">
-            <span class="finding-text">{{ first.finding | default('') }}</span>
+            <span class="finding-text">{{ item.finding | default('') }}</span>
             <div class="finding-badges">
-              {% if first.severity | lower in ['high', 'medium', 'low'] and 'none' not in first.severity | lower and 'positive' not in first.finding | lower and 'strength' not in first.severity | lower %}
-                <span class="badge badge-{{ first.severity | lower }}">{{ first.severity }}</span>
-                {% if first.monthly_loss | default(0) > 0 %}
-                <span class="loss-badge">-${{ first.monthly_loss }}/mo</span>
+              {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
+                <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+                {% if item.monthly_loss | default(0) > 0 %}
+                <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
                 {% endif %}
               {% else %}
                 <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
               {% endif %}
             </div>
           </div>
-          <div class="finding-row"><strong>Impact:</strong> {{ first.impact | default('') }}</div>
+          <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
         </div>
-        {% if all_findings | length > 1 %}
-        <p class="teaser-line" id="teaser-line">Plus {{ all_findings | length - 1 }} more leak{{ 's' if all_findings | length - 1 != 1 else '' }} identified...</p>
+        {% endfor %}
+        {% if gated_count > 0 %}
+        <p class="teaser-line" id="teaser-line">Plus {{ gated_count }} more leak{{ 's' if gated_count != 1 else '' }} identified...</p>
         {% endif %}
       </div>
     {% endif %}
 
     <!-- Unlock Card (shown when gated) -->
-    <div class="unlock-card" id="unlock-card">
-      <h3 id="unlock-headline">Your website has more revenue leaks.</h3>
+    <div class="unlock-card" id="unlock-card"{% if gated_count == 0 %} style="display:none;"{% endif %}>
+      <h3 id="unlock-headline">Your website is leaking {{ gated_count }} more revenue source{{ 's' if gated_count != 1 else '' }}.</h3>
       <p class="unlock-sub">Enter your email to unlock the full report &mdash; free.</p>
       <ul class="unlock-benefits" id="unlock-benefits">
-        <li><span class="benefit-check">&#x2713;</span> See all leaks with exact dollar amounts</li>
+        <li><span class="benefit-check">&#x2713;</span> See all {{ gated_count }} leak{{ 's' if gated_count != 1 else '' }} with exact dollar amounts</li>
         <li><span class="benefit-check">&#x2713;</span> Get a prioritized action plan to fix them</li>
         <li><span class="benefit-check">&#x2713;</span> Know exactly where to start</li>
       </ul>
@@ -2000,19 +2004,6 @@
         unlockCard.style.display = 'none';
         if (teaserLine) teaserLine.style.display = 'none';
         gatedContent.classList.add('unlocked');
-      }
-
-      // Set dynamic counts in unlock card
-      var unlockHeadline = document.getElementById('unlock-headline');
-      var benefitsList = document.getElementById('unlock-benefits');
-      if (totalGated > 0 && unlockHeadline) {
-        unlockHeadline.textContent = 'Your website is leaking ' + totalGated + ' more revenue source' + (totalGated !== 1 ? 's' : '') + '.';
-      }
-      if (totalGated > 0 && benefitsList) {
-        benefitsList.innerHTML =
-          '<li><span class="benefit-check">&#x2713;</span> See all ' + totalGated + ' leak' + (totalGated !== 1 ? 's' : '') + ' with exact dollar amounts</li>' +
-          '<li><span class="benefit-check">&#x2713;</span> Get a prioritized action plan to fix them</li>' +
-          '<li><span class="benefit-check">&#x2713;</span> Know exactly where to start</li>';
       }
 
       // Check if already unlocked

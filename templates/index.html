@@ -265,34 +265,9 @@
     .loading-overlay.active {
       display: flex;
     }
-    .loading-url {
-      font-size: 1.1rem;
-      color: #94a3b8;
-      margin-bottom: 2.5rem;
-      font-weight: 600;
-    }
-    .loading-url strong {
-      color: #e2e8f0;
-    }
-
-    .revenue-counter {
-      font-family: "SF Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
-      font-size: 3.6rem;
-      font-weight: 900;
-      color: #ef4444;
-      margin-bottom: 0.4rem;
-      letter-spacing: -0.02em;
-      animation: counterGlow 2s ease-in-out infinite;
-    }
     @keyframes counterGlow {
       0%, 100% { text-shadow: 0 0 20px rgba(220,38,38,0.2); }
       50% { text-shadow: 0 0 20px rgba(220,38,38,0.4); }
-    }
-    .revenue-label {
-      font-size: 0.9rem;
-      color: #64748b;
-      font-style: italic;
-      margin-bottom: 2.5rem;
     }
 
     .loading-status {
@@ -432,9 +407,9 @@
 
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loading-overlay">
-    <div class="loading-url" id="loading-url">Auditing <strong id="loading-url-text">...</strong></div>
-    <div class="revenue-counter" id="revenue-counter">$0</div>
-    <div class="revenue-label">estimated annual revenue leaking</div>
+    <div id="loading-domain" style="font-size:1rem;color:#94a3b8;margin-bottom:0.5rem;letter-spacing:0.05em;"></div>
+    <div id="loading-counter" style="font-size:3rem;font-weight:900;color:#dc2626;font-family:monospace;letter-spacing:-0.02em;animation:counterGlow 2s ease-in-out infinite;"></div>
+    <div style="font-size:0.8rem;color:#475569;font-style:italic;margin-bottom:1.5rem;">estimated annual revenue leaking</div>
     <div class="progress-wrap">
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-fill"></div>
@@ -453,7 +428,8 @@
     const overlay = document.getElementById('loading-overlay');
     const fillEl = document.getElementById('progress-fill');
     const percentEl = document.getElementById('progress-percent');
-    const urlTextEl = document.getElementById('loading-url-text');
+    const domainEl = document.getElementById('loading-domain');
+    const counterEl = document.getElementById('loading-counter');
 
     const facts = [
       ["47 hours", "That's how long the average business takes to respond to a new lead.", "By then, the prospect has already called 3 competitors."],
@@ -522,7 +498,6 @@
       return '$' + Math.round(n).toLocaleString('en-US');
     }
 
-    var counterEl = document.getElementById('revenue-counter');
     var counterInterval = null;
 
     function stopCounter() {
@@ -533,7 +508,7 @@
       e.preventDefault();
 
       var urlVal = document.getElementById('url').value.trim();
-      urlTextEl.textContent = extractDomain(urlVal);
+      domainEl.textContent = 'Auditing ' + extractDomain(urlVal);
       overlay.classList.add('active');
 
       // Start fact cycling

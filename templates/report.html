@@ -688,66 +688,101 @@
     }
 
     /* Freemium Gate */
-    .finding-card.gated {
-      position: relative;
-      filter: blur(4px);
-      user-select: none;
-      pointer-events: none;
+    .gated-content { display: none; }
+    .gated-content.unlocked {
+      display: block;
+      animation: gateReveal 0.6s ease-out;
     }
-    .gate-overlay {
-      display: none;
-      position: relative;
-      background: linear-gradient(135deg, #1a0a0a 0%, #1e0505 100%);
+    @keyframes gateReveal {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .teaser-line {
+      font-size: 0.95rem;
+      color: #f87171;
+      font-weight: 600;
+      padding: 0.8rem 0 0.5rem;
+      font-style: italic;
+    }
+    .unlock-card {
+      background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
       border: 1px solid rgba(220, 38, 38, 0.4);
       border-left: 4px solid #dc2626;
-      border-radius: 12px;
-      padding: 1.8rem 2rem;
-      margin: 1rem 0 1.5rem;
+      border-radius: 14px;
+      padding: 2.5rem 2.5rem;
+      margin: 2rem 0 2.5rem;
       text-align: center;
     }
-    .gate-overlay.visible { display: block; }
-    .gate-overlay h3 {
-      font-size: 1.15rem;
-      font-weight: 800;
+    .unlock-card h3 {
+      font-size: 1.4rem;
+      font-weight: 900;
       color: #fca5a5;
       margin-bottom: 0.5rem;
+      line-height: 1.3;
     }
-    .gate-overlay p {
-      font-size: 0.92rem;
+    .unlock-card .unlock-sub {
+      font-size: 1.05rem;
       color: #94a3b8;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.5rem;
     }
-    .gate-email-form {
+    .unlock-benefits {
+      list-style: none;
+      text-align: left;
+      max-width: 380px;
+      margin: 0 auto 1.8rem;
+    }
+    .unlock-benefits li {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      padding: 0.4rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .unlock-benefits li .benefit-check {
+      color: #22c55e;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .unlock-email-form {
       display: flex;
       gap: 0.6rem;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 0.8rem;
     }
-    .gate-email-form input[type="email"] {
-      padding: 0.7rem 1rem;
+    .unlock-email-form input[type="email"] {
+      padding: 0.85rem 1.1rem;
       background: #0a0f1a;
       border: 1px solid #1e293b;
-      border-radius: 8px;
+      border-radius: 10px;
       color: #e2e8f0;
-      font-size: 0.95rem;
+      font-size: 1rem;
       outline: none;
-      min-width: 220px;
+      min-width: 260px;
       transition: border-color 0.2s;
     }
-    .gate-email-form input[type="email"]:focus { border-color: #dc2626; }
-    .gate-email-form input[type="email"]::placeholder { color: #475569; }
-    .gate-email-form button {
-      padding: 0.7rem 1.5rem;
+    .unlock-email-form input[type="email"]:focus { border-color: #dc2626; }
+    .unlock-email-form input[type="email"]::placeholder { color: #475569; }
+    .unlock-email-form button {
+      padding: 0.85rem 1.8rem;
       background: #dc2626;
       color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 700;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 800;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
     }
-    .gate-email-form button:hover { background: #b91c1c; }
+    .unlock-email-form button:hover { background: #b91c1c; }
+    .unlock-email-form button:active { transform: scale(0.97); }
+    .unlock-fine-print {
+      font-size: 0.78rem;
+      color: #475569;
+    }
 
     /* Calendly CTA Card */
     .calendly-cta {
@@ -1000,6 +1035,56 @@
       </div>
     </div>
 
+    <!-- First Finding Preview (always visible) -->
+    {% set all_findings = lead_leaks + conversion_leaks + follow_up_leaks %}
+    {% if all_findings %}
+      {% set first = all_findings[0] %}
+      <div class="section">
+        <h2 class="section-title" style="margin-bottom:1rem;">
+          <span class="section-title-icon" style="background:rgba(239,68,68,0.12);color:#ef4444;">1</span>
+          Top Finding
+        </h2>
+        <div class="finding finding-card" data-severity="{{ first.severity | lower }}" data-loss="{{ first.monthly_loss | default(0) }}">
+          <div class="finding-header">
+            <span class="finding-text">{{ first.finding | default('') }}</span>
+            <div class="finding-badges">
+              {% if first.severity | lower in ['high', 'medium', 'low'] and 'none' not in first.severity | lower and 'positive' not in first.finding | lower and 'strength' not in first.severity | lower %}
+                <span class="badge badge-{{ first.severity | lower }}">{{ first.severity }}</span>
+                {% if first.monthly_loss | default(0) > 0 %}
+                <span class="loss-badge">-${{ first.monthly_loss }}/mo</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="finding-row"><strong>Impact:</strong> {{ first.impact | default('') }}</div>
+        </div>
+        {% if all_findings | length > 1 %}
+        <p class="teaser-line" id="teaser-line">Plus {{ all_findings | length - 1 }} more leak{{ 's' if all_findings | length - 1 != 1 else '' }} identified...</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- Unlock Card (shown when gated) -->
+    <div class="unlock-card" id="unlock-card">
+      <h3 id="unlock-headline">Your website has more revenue leaks.</h3>
+      <p class="unlock-sub">Enter your email to unlock the full report &mdash; free.</p>
+      <ul class="unlock-benefits" id="unlock-benefits">
+        <li><span class="benefit-check">&#x2713;</span> See all leaks with exact dollar amounts</li>
+        <li><span class="benefit-check">&#x2713;</span> Get a prioritized action plan to fix them</li>
+        <li><span class="benefit-check">&#x2713;</span> Know exactly where to start</li>
+      </ul>
+      <form class="unlock-email-form" id="unlock-email-form" onsubmit="return false;">
+        <input type="email" id="unlock-email-input" placeholder="you@company.com" required>
+        <button type="submit" id="unlock-btn">Unlock My Full Report &rarr;</button>
+      </form>
+      <p class="unlock-fine-print">No spam. No sales calls. Just your report.</p>
+    </div>
+
+    <!-- GATED CONTENT — hidden until email submitted -->
+    <div class="gated-content" id="gated-content">
+
     <!-- Severity Focus Bar -->
     <div class="focus-bar" id="focus-bar" style="margin-bottom:1rem;">
       <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem;">
@@ -1110,16 +1195,6 @@
       {% else %}
         <p style="color:#64748b;font-size:0.9rem;font-style:italic;padding:1rem 0;">No follow-up leak findings detected</p>
       {% endif %}
-    </div>
-
-    <!-- Freemium Gate Overlay -->
-    <div class="gate-overlay" id="gate-overlay">
-      <h3 id="gate-headline">More leaks identified</h3>
-      <p>Enter your email below to unlock the full report</p>
-      <form class="gate-email-form" id="gate-email-form" onsubmit="return false;">
-        <input type="email" id="gate-email-input" placeholder="you@company.com" required>
-        <button type="submit" id="gate-unlock-btn">Unlock Full Report</button>
-      </form>
     </div>
 
     <!-- Priority Fixes -->
@@ -1257,6 +1332,8 @@
       {% endif %}
     </div>
     {% endif %}
+
+    </div><!-- /gated-content -->
 
     <!-- Email Capture -->
     <div class="email-capture" id="email-capture">
@@ -1907,53 +1984,49 @@
 
     // ==================== Freemium Gate ====================
     (function() {
-      var FREE_LIMIT = 3;
       var UNLOCKED_KEY = 'report_unlocked';
-      var allCards = document.querySelectorAll('.finding-card');
-      var gateOverlay = document.getElementById('gate-overlay');
-      var gateHeadline = document.getElementById('gate-headline');
+      var gatedContent = document.getElementById('gated-content');
+      var unlockCard = document.getElementById('unlock-card');
+      var teaserLine = document.getElementById('teaser-line');
+      var allFindings = document.querySelectorAll('#gated-content .finding-card');
+      var totalGated = allFindings.length;
 
       function isUnlocked() {
         return localStorage.getItem(UNLOCKED_KEY) === 'true';
       }
 
-      function applyGate() {
-        if (isUnlocked()) {
-          // Remove all gates
-          allCards.forEach(function(card) { card.classList.remove('gated'); });
-          gateOverlay.classList.remove('visible');
-          return;
-        }
-        var gatedCount = 0;
-        allCards.forEach(function(card, i) {
-          if (i >= FREE_LIMIT) {
-            card.classList.add('gated');
-            gatedCount++;
-          } else {
-            card.classList.remove('gated');
-          }
-        });
-        if (gatedCount > 0) {
-          gateHeadline.innerHTML = '&#x1F512; ' + gatedCount + ' more leak' + (gatedCount !== 1 ? 's' : '') + ' identified &mdash; Enter your email below to unlock the full report';
-          gateOverlay.classList.add('visible');
-        } else {
-          gateOverlay.classList.remove('visible');
-        }
-      }
-
       function unlockReport() {
         localStorage.setItem(UNLOCKED_KEY, 'true');
-        allCards.forEach(function(card) { card.classList.remove('gated'); });
-        gateOverlay.classList.remove('visible');
+        unlockCard.style.display = 'none';
+        if (teaserLine) teaserLine.style.display = 'none';
+        gatedContent.classList.add('unlocked');
       }
 
-      // Gate email form
-      document.getElementById('gate-email-form').addEventListener('submit', function(e) {
+      // Set dynamic counts in unlock card
+      var unlockHeadline = document.getElementById('unlock-headline');
+      var benefitsList = document.getElementById('unlock-benefits');
+      if (totalGated > 0 && unlockHeadline) {
+        unlockHeadline.textContent = 'Your website is leaking ' + totalGated + ' more revenue source' + (totalGated !== 1 ? 's' : '') + '.';
+      }
+      if (totalGated > 0 && benefitsList) {
+        benefitsList.innerHTML =
+          '<li><span class="benefit-check">&#x2713;</span> See all ' + totalGated + ' leak' + (totalGated !== 1 ? 's' : '') + ' with exact dollar amounts</li>' +
+          '<li><span class="benefit-check">&#x2713;</span> Get a prioritized action plan to fix them</li>' +
+          '<li><span class="benefit-check">&#x2713;</span> Know exactly where to start</li>';
+      }
+
+      // Check if already unlocked
+      if (isUnlocked()) {
+        unlockReport();
+      }
+
+      // Unlock form handler
+      document.getElementById('unlock-email-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        var emailInput = document.getElementById('gate-email-input');
+        var emailInput = document.getElementById('unlock-email-input');
         var email = emailInput.value.trim();
         if (!email) return;
-        var btn = document.getElementById('gate-unlock-btn');
+        var btn = document.getElementById('unlock-btn');
         btn.textContent = 'Unlocking...';
         btn.disabled = true;
 
@@ -1969,19 +2042,12 @@
             annual_loss: totalMonthlyLoss * 12,
             source: 'freemium_gate'
           })
-        }).then(function(res) {
-          if (res.ok) {
-            unlockReport();
-          } else {
-            // Unlock anyway on server error — don't punish user
-            unlockReport();
-          }
+        }).then(function() {
+          unlockReport();
         }).catch(function() {
           unlockReport();
         });
       });
-
-      applyGate();
     })();
 
     // ==================== Email Capture ====================
@@ -2025,8 +2091,9 @@
           document.getElementById('email-success').style.display = 'block';
           // Also unlock freemium gate
           localStorage.setItem('report_unlocked', 'true');
-          document.querySelectorAll('.finding-card.gated').forEach(function(c) { c.classList.remove('gated'); });
-          var go = document.getElementById('gate-overlay'); if (go) go.classList.remove('visible');
+          var uc = document.getElementById('unlock-card'); if (uc) uc.style.display = 'none';
+          var tl = document.getElementById('teaser-line'); if (tl) tl.style.display = 'none';
+          var gc = document.getElementById('gated-content'); if (gc) gc.classList.add('unlocked');
         } else {
           res.text().then(function(body) {
             console.error('[EmailCapture] Server error:', res.status, body);

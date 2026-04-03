@@ -171,13 +171,14 @@ def generate_report(
             print("[generate_report] Empty analysis received, returning fallback")
             return _fallback_report(business_name, url, timestamp, "Empty analysis from AI")
 
+        print(f"[DEBUG] Raw analysis first 1000 chars: {analysis[:1000]}")
+
         parsed = _parse_analysis(analysis)
 
-        # Log parsed structure for debugging
-        print(f"[generate_report] Parsed keys: {list(parsed.keys())}")
-        print(f"[generate_report] lead_leaks count: {len(parsed.get('lead_leaks', []))}")
-        print(f"[generate_report] conversion_leaks count: {len(parsed.get('conversion_leaks', []))}")
-        print(f"[generate_report] follow_up_leaks count: {len(parsed.get('follow_up_leaks', []))}")
+        print(f"[DEBUG] Lead leaks parsed: {len(parsed.get('lead_leaks', []))}")
+        print(f"[DEBUG] Conversion leaks parsed: {len(parsed.get('conversion_leaks', []))}")
+        print(f"[DEBUG] Follow-up leaks parsed: {len(parsed.get('follow_up_leaks', []))}")
+        print(f"[DEBUG] Executive summary length: {len(parsed.get('executive_summary', ''))}")
 
         # Ensure all expected keys exist with safe defaults
         parsed.setdefault("executive_summary", "")

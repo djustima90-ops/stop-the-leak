@@ -764,6 +764,39 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Floating Calendly Button */
+    .floating-cta {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 99;
+      padding: 0.8rem 1.4rem;
+      background: var(--red);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform 0.4s ease-out, opacity 0.4s ease-out, background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .floating-cta.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .floating-cta:hover {
+      background: #b91c1c;
+      box-shadow: 0 6px 28px rgba(220, 38, 38, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -1003,6 +1036,24 @@
         btn.classList.add('entered');
       });
     });
+
+    // Floating Calendly button — show after 300px scroll
+    (function() {
+      var floatBtn = document.getElementById('floating-cta');
+      if (!floatBtn) return;
+      var shown = false;
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 300 && !shown) {
+          shown = true;
+          floatBtn.classList.add('visible');
+        } else if (window.scrollY <= 300 && shown) {
+          shown = false;
+          floatBtn.classList.remove('visible');
+        }
+      }, { passive: true });
+    })();
   </script>
+
+  <a href="https://calendly.com/djustima90/30min" class="floating-cta" id="floating-cta" target="_blank" rel="noopener">&#x1F4C5; Book a Free Call</a>
 </body>
 </html>

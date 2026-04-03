@@ -687,6 +687,109 @@
       margin-top: 0.8rem;
     }
 
+    /* Freemium Gate */
+    .finding-card.gated {
+      position: relative;
+      filter: blur(4px);
+      user-select: none;
+      pointer-events: none;
+    }
+    .gate-overlay {
+      display: none;
+      position: relative;
+      background: linear-gradient(135deg, #1a0a0a 0%, #1e0505 100%);
+      border: 1px solid rgba(220, 38, 38, 0.4);
+      border-left: 4px solid #dc2626;
+      border-radius: 12px;
+      padding: 1.8rem 2rem;
+      margin: 1rem 0 1.5rem;
+      text-align: center;
+    }
+    .gate-overlay.visible { display: block; }
+    .gate-overlay h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fca5a5;
+      margin-bottom: 0.5rem;
+    }
+    .gate-overlay p {
+      font-size: 0.92rem;
+      color: #94a3b8;
+      margin-bottom: 1.2rem;
+    }
+    .gate-email-form {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .gate-email-form input[type="email"] {
+      padding: 0.7rem 1rem;
+      background: #0a0f1a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      outline: none;
+      min-width: 220px;
+      transition: border-color 0.2s;
+    }
+    .gate-email-form input[type="email"]:focus { border-color: #dc2626; }
+    .gate-email-form input[type="email"]::placeholder { color: #475569; }
+    .gate-email-form button {
+      padding: 0.7rem 1.5rem;
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .gate-email-form button:hover { background: #b91c1c; }
+
+    /* Calendly CTA Card */
+    .calendly-cta {
+      background: linear-gradient(135deg, #1a1608 0%, #1e1a0d 100%);
+      border: 1px solid rgba(217, 119, 6, 0.25);
+      border-left: 4px solid #d97706;
+      border-radius: 14px;
+      padding: 2rem 2.2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .calendly-cta h3 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-bottom: 0.4rem;
+    }
+    .calendly-cta p {
+      font-size: 0.95rem;
+      color: #92854a;
+      margin-bottom: 1.4rem;
+      line-height: 1.6;
+    }
+    .calendly-btn {
+      display: inline-block;
+      padding: 0.9rem 2.2rem;
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .calendly-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(217, 119, 6, 0.35);
+    }
+
     /* Footer */
     .footer {
       text-align: center;
@@ -874,7 +977,7 @@
     <!-- Executive Summary -->
     <div class="summary-card">
       <h2>Executive Summary</h2>
-      <p>{{ executive_summary | default('') }}</p>
+      <p>{{ executive_summary if executive_summary else 'Analysis complete. See findings below.' }}</p>
     </div>
 
     <!-- Leak Counts -->
@@ -925,25 +1028,28 @@
         <span class="section-title-icon">1</span>
         Lead Leaks
       </h2>
-      {{ lead_leaks|length }} findings
-      {% for item in lead_leaks %}
-      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
-        <div class="finding-header">
-          <span class="finding-text">{{ item.finding | default('') }}</span>
-          <div class="finding-badges">
-            {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
-              <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
-              {% if item.monthly_loss | default(0) > 0 %}
-              <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+      {% if lead_leaks %}
+        {% for item in lead_leaks %}
+        <div class="finding finding-card" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
+          <div class="finding-header">
+            <span class="finding-text">{{ item.finding | default('') }}</span>
+            <div class="finding-badges">
+              {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
+                <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+                {% if item.monthly_loss | default(0) > 0 %}
+                <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
               {% endif %}
-            {% else %}
-              <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
-            {% endif %}
+            </div>
           </div>
+          <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
         </div>
-        <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
-      </div>
-      {% endfor %}
+        {% endfor %}
+      {% else %}
+        <p style="color:#64748b;font-size:0.9rem;font-style:italic;padding:1rem 0;">No lead leak findings detected</p>
+      {% endif %}
     </div>
 
     <!-- Conversion Leaks -->
@@ -952,25 +1058,28 @@
         <span class="section-title-icon">2</span>
         Conversion Leaks
       </h2>
-      {{ conversion_leaks|length }} findings
-      {% for item in conversion_leaks %}
-      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
-        <div class="finding-header">
-          <span class="finding-text">{{ item.finding | default('') }}</span>
-          <div class="finding-badges">
-            {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
-              <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
-              {% if item.monthly_loss | default(0) > 0 %}
-              <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+      {% if conversion_leaks %}
+        {% for item in conversion_leaks %}
+        <div class="finding finding-card" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
+          <div class="finding-header">
+            <span class="finding-text">{{ item.finding | default('') }}</span>
+            <div class="finding-badges">
+              {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
+                <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+                {% if item.monthly_loss | default(0) > 0 %}
+                <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
               {% endif %}
-            {% else %}
-              <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
-            {% endif %}
+            </div>
           </div>
+          <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
         </div>
-        <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
-      </div>
-      {% endfor %}
+        {% endfor %}
+      {% else %}
+        <p style="color:#64748b;font-size:0.9rem;font-style:italic;padding:1rem 0;">No conversion leak findings detected</p>
+      {% endif %}
     </div>
 
     <!-- Follow-Up Leaks -->
@@ -979,25 +1088,38 @@
         <span class="section-title-icon">3</span>
         Follow-Up Leaks
       </h2>
-      {{ follow_up_leaks|length }} findings
-      {% for item in follow_up_leaks %}
-      <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
-        <div class="finding-header">
-          <span class="finding-text">{{ item.finding | default('') }}</span>
-          <div class="finding-badges">
-            {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
-              <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
-              {% if item.monthly_loss | default(0) > 0 %}
-              <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+      {% if follow_up_leaks %}
+        {% for item in follow_up_leaks %}
+        <div class="finding finding-card" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
+          <div class="finding-header">
+            <span class="finding-text">{{ item.finding | default('') }}</span>
+            <div class="finding-badges">
+              {% if item.severity | lower in ['high', 'medium', 'low'] and 'none' not in item.severity | lower and 'positive' not in item.finding | lower and 'strength' not in item.severity | lower %}
+                <span class="badge badge-{{ item.severity | lower }}">{{ item.severity }}</span>
+                {% if item.monthly_loss | default(0) > 0 %}
+                <span class="loss-badge">-${{ item.monthly_loss }}/mo</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
               {% endif %}
-            {% else %}
-              <span class="badge badge-none"><span class="check">&#x2713;</span> Strength</span>
-            {% endif %}
+            </div>
           </div>
+          <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
         </div>
-        <div class="finding-row"><strong>Impact:</strong> {{ item.impact | default('') }}</div>
-      </div>
-      {% endfor %}
+        {% endfor %}
+      {% else %}
+        <p style="color:#64748b;font-size:0.9rem;font-style:italic;padding:1rem 0;">No follow-up leak findings detected</p>
+      {% endif %}
+    </div>
+
+    <!-- Freemium Gate Overlay -->
+    <div class="gate-overlay" id="gate-overlay">
+      <h3 id="gate-headline">More leaks identified</h3>
+      <p>Enter your email below to unlock the full report</p>
+      <form class="gate-email-form" id="gate-email-form" onsubmit="return false;">
+        <input type="email" id="gate-email-input" placeholder="you@company.com" required>
+        <button type="submit" id="gate-unlock-btn">Unlock Full Report</button>
+      </form>
     </div>
 
     <!-- Priority Fixes -->
@@ -1146,10 +1268,17 @@
       </form>
       <div class="email-success" id="email-success">&#x2713; We'll be in touch within 24 hours</div>
     </div>
+
+    <!-- Calendly CTA -->
+    <div class="calendly-cta">
+      <h3>Want someone to fix this for you?</h3>
+      <p>Book a free 30-minute call. We'll walk through your report and tell you exactly what to prioritize.</p>
+      <a href="https://calendly.com/djustima90/30min" class="calendly-btn" target="_blank" rel="noopener">Book a Free Call &rarr;</a>
+    </div>
   </div>
 
   <div class="footer">
-    <p>Generated by <a href="/">Stop the Leak</a> &nbsp;&middot;&nbsp; Powered by Claude AI</p>
+    <p>Generated by <a href="/">Stop the Leak</a> &nbsp;&middot;&nbsp; <a href="https://anthropic.com" target="_blank" rel="noopener" style="color:#94a3b8;font-size:0.75rem;">&#x26A1; Powered by Claude AI</a></p>
   </div>
 
   <script>
@@ -1776,6 +1905,85 @@
       }, 2000);
     });
 
+    // ==================== Freemium Gate ====================
+    (function() {
+      var FREE_LIMIT = 3;
+      var UNLOCKED_KEY = 'report_unlocked';
+      var allCards = document.querySelectorAll('.finding-card');
+      var gateOverlay = document.getElementById('gate-overlay');
+      var gateHeadline = document.getElementById('gate-headline');
+
+      function isUnlocked() {
+        return localStorage.getItem(UNLOCKED_KEY) === 'true';
+      }
+
+      function applyGate() {
+        if (isUnlocked()) {
+          // Remove all gates
+          allCards.forEach(function(card) { card.classList.remove('gated'); });
+          gateOverlay.classList.remove('visible');
+          return;
+        }
+        var gatedCount = 0;
+        allCards.forEach(function(card, i) {
+          if (i >= FREE_LIMIT) {
+            card.classList.add('gated');
+            gatedCount++;
+          } else {
+            card.classList.remove('gated');
+          }
+        });
+        if (gatedCount > 0) {
+          gateHeadline.innerHTML = '&#x1F512; ' + gatedCount + ' more leak' + (gatedCount !== 1 ? 's' : '') + ' identified &mdash; Enter your email below to unlock the full report';
+          gateOverlay.classList.add('visible');
+        } else {
+          gateOverlay.classList.remove('visible');
+        }
+      }
+
+      function unlockReport() {
+        localStorage.setItem(UNLOCKED_KEY, 'true');
+        allCards.forEach(function(card) { card.classList.remove('gated'); });
+        gateOverlay.classList.remove('visible');
+      }
+
+      // Gate email form
+      document.getElementById('gate-email-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var emailInput = document.getElementById('gate-email-input');
+        var email = emailInput.value.trim();
+        if (!email) return;
+        var btn = document.getElementById('gate-unlock-btn');
+        btn.textContent = 'Unlocking...';
+        btn.disabled = true;
+
+        fetch('/capture-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            business_name: '{{ (business_name | default('Unknown Business')) | replace("'", "\\'") }}',
+            url: '{{ (url | default('')) | replace("'", "\\'") }}',
+            domain: '{{ (url | default('')) | replace("'", "\\'") }}'.replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+            monthly_loss: totalMonthlyLoss,
+            annual_loss: totalMonthlyLoss * 12,
+            source: 'freemium_gate'
+          })
+        }).then(function(res) {
+          if (res.ok) {
+            unlockReport();
+          } else {
+            // Unlock anyway on server error — don't punish user
+            unlockReport();
+          }
+        }).catch(function() {
+          unlockReport();
+        });
+      });
+
+      applyGate();
+    })();
+
     // ==================== Email Capture ====================
     document.getElementById('email-form').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -1815,6 +2023,10 @@
         if (res.ok) {
           document.getElementById('email-form').style.display = 'none';
           document.getElementById('email-success').style.display = 'block';
+          // Also unlock freemium gate
+          localStorage.setItem('report_unlocked', 'true');
+          document.querySelectorAll('.finding-card.gated').forEach(function(c) { c.classList.remove('gated'); });
+          var go = document.getElementById('gate-overlay'); if (go) go.classList.remove('visible');
         } else {
           res.text().then(function(body) {
             console.error('[EmailCapture] Server error:', res.status, body);

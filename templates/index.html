@@ -275,9 +275,24 @@
       color: #e2e8f0;
     }
 
-    @keyframes pulse-line {
-      0%, 100% { width: 40px; opacity: 0.7; }
-      50% { width: 80px; opacity: 1; }
+    .revenue-counter {
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
+      font-size: 3.6rem;
+      font-weight: 900;
+      color: #ef4444;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
+      animation: counterGlow 2s ease-in-out infinite;
+    }
+    @keyframes counterGlow {
+      0%, 100% { text-shadow: 0 0 20px rgba(220,38,38,0.2); }
+      50% { text-shadow: 0 0 20px rgba(220,38,38,0.4); }
+    }
+    .revenue-label {
+      font-size: 0.9rem;
+      color: #64748b;
+      font-style: italic;
+      margin-bottom: 2.5rem;
     }
 
     .loading-status {
@@ -417,19 +432,19 @@
 
   <!-- LOADING OVERLAY -->
   <div class="loading-overlay" id="loading-overlay">
-    <div style="font-size:1.4rem;font-weight:900;letter-spacing:0.2em;color:white;margin-bottom:1rem;">STOP THE LEAK</div>
-    <div style="width:60px;height:3px;background:#dc2626;margin:0 auto 2rem;border-radius:2px;animation:pulse-line 2s ease-in-out infinite;"></div>
     <div class="loading-url" id="loading-url">Auditing <strong id="loading-url-text">...</strong></div>
-    <div class="loading-status" id="loading-status">
-      <div class="fact-label">Did you know?</div>
-      <div class="fact-stat" id="fact-stat"></div>
-      <div class="fact-support" id="fact-support"></div>
-    </div>
+    <div class="revenue-counter" id="revenue-counter">$0</div>
+    <div class="revenue-label">estimated annual revenue leaking</div>
     <div class="progress-wrap">
       <div class="progress-bar-bg">
         <div class="progress-bar-fill" id="progress-fill"></div>
       </div>
       <div class="progress-percent" id="progress-percent">0%</div>
+    </div>
+    <div class="loading-status" id="loading-status">
+      <div class="fact-label">Did you know?</div>
+      <div class="fact-stat" id="fact-stat"></div>
+      <div class="fact-support" id="fact-support"></div>
     </div>
   </div>
 
@@ -491,11 +506,34 @@
       }, 500);
     }
 
+    function extractDomain(input) {
+      var s = input.trim();
+      // Add protocol if missing so URL constructor works
+      if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+      try {
+        var host = new URL(s).hostname;
+        return host.replace(/^www\./i, '');
+      } catch(e) {
+        return input.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
+      }
+    }
+
+    function formatMoney(n) {
+      return '$' + Math.round(n).toLocaleString('en-US');
+    }
+
+    var counterEl = document.getElementById('revenue-counter');
+    var counterInterval = null;
+
+    function stopCounter() {
+      if (counterInterval) { clearInterval(counterInterval); counterInterval = null; }
+    }
+
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
-      const urlVal = document.getElementById('url').value.trim();
-      urlTextEl.textContent = urlVal;
+      var urlVal = document.getElementById('url').value.trim();
+      urlTextEl.textContent = extractDomain(urlVal);
       overlay.classList.add('active');
 
       // Start fact cycling
@@ -503,15 +541,30 @@
       factIndex = 0;
       showFact(factIndex);
 
+      // Revenue counter: 0 to random target over 55s with easing
+      var target = Math.floor(Math.random() * (74000 - 28000 + 1)) + 28000;
+      var counterDuration = 55000;
+      var counterStart = Date.now();
+      counterEl.textContent = '$0';
+      stopCounter();
+      counterInterval = setInterval(function() {
+        var elapsed = Date.now() - counterStart;
+        var t = Math.min(elapsed / counterDuration, 1);
+        // Ease-out quad: starts fast, slows near end
+        var eased = t * (2 - t);
+        counterEl.textContent = formatMoney(eased * target);
+        if (t >= 1) stopCounter();
+      }, 200);
+
       // Progress bar: 0 to 99 over 60 seconds
-      const duration = 60000;
-      const startTime = Date.now();
-      let progressStopped = false;
+      var duration = 60000;
+      var startTime = Date.now();
+      var progressStopped = false;
 
       function updateProgress() {
         if (progressStopped) return;
-        const elapsed = Date.now() - startTime;
-        const pct = Math.min(Math.round((elapsed / duration) * 100), 99);
+        var elapsed = Date.now() - startTime;
+        var pct = Math.min(Math.round((elapsed / duration) * 100), 99);
         fillEl.style.width = pct + '%';
         percentEl.textContent = pct + '%';
         if (pct < 99) requestAnimationFrame(updateProgress);
@@ -526,9 +579,10 @@
       }).then(function(response) {
         progressStopped = true;
         stopFactCycle();
+        stopCounter();
 
-        const statEl = document.getElementById('fact-stat');
-        const supportEl = document.getElementById('fact-support');
+        var statEl = document.getElementById('fact-stat');
+        var supportEl = document.getElementById('fact-support');
 
         // Snap to 100%
         fillEl.style.width = '100%';
@@ -552,10 +606,11 @@
       }).catch(function(err) {
         progressStopped = true;
         stopFactCycle();
+        stopCounter();
         console.error('[Audit] Request failed:', err);
 
-        const statEl = document.getElementById('fact-stat');
-        const supportEl = document.getElementById('fact-support');
+        var statEl = document.getElementById('fact-stat');
+        var supportEl = document.getElementById('fact-support');
         if (statEl) { statEl.textContent = 'Something went wrong. Please try again.'; statEl.style.opacity = '1'; }
         if (supportEl) { supportEl.textContent = ''; supportEl.style.opacity = '1'; }
         fillEl.style.width = '0%';

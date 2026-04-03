@@ -617,6 +617,33 @@
       border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
+    /* Category Badges */
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .cat-badge-lead {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .cat-badge-conversion {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+    .cat-badge-followup {
+      background: rgba(147, 51, 234, 0.12);
+      color: #c084fc;
+      border: 1px solid rgba(147, 51, 234, 0.25);
+    }
+
     /* Email Capture Card */
     .email-capture {
       background: linear-gradient(135deg, #0d1117 0%, #111827 100%);
@@ -1259,25 +1286,25 @@
       <h2>Action Report &mdash; Your Complete Fix List</h2>
       <p class="action-sub">Check off each fix to watch your revenue leak shrink in real time</p>
 
-      {# Collect all findings with fixes, losses, and tags #}
+      {# Collect all findings with fixes, losses, tags, and filter category #}
       {% set all_actions = [] %}
       {% for item in lead_leaks %}
         {% if item.fix and item.severity | lower in ['high', 'medium', 'low'] %}
           {% set fl = item.finding | lower %}
           {% set tag = 'speed-to-lead' if ('phone' in fl or 'contact form' in fl or 'live chat' in fl or 'chat widget' in fl or 'email address' in fl or 'response' in fl) else '' %}
-          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Lead Leak', 'monthly_loss': item.monthly_loss | default(0), 'id': 'lead-' ~ loop.index0, 'tag': tag}) %}{% endif %}
+          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Lead Leak', 'cat_filter': 'lead', 'monthly_loss': item.monthly_loss | default(0), 'id': 'lead-' ~ loop.index0, 'tag': tag}) %}{% endif %}
         {% endif %}
       {% endfor %}
       {% for item in conversion_leaks %}
         {% if item.fix and item.severity | lower in ['high', 'medium', 'low'] %}
-          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Conversion Leak', 'monthly_loss': item.monthly_loss | default(0), 'id': 'conv-' ~ loop.index0, 'tag': ''}) %}{% endif %}
+          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Conversion Leak', 'cat_filter': 'conversion', 'monthly_loss': item.monthly_loss | default(0), 'id': 'conv-' ~ loop.index0, 'tag': ''}) %}{% endif %}
         {% endif %}
       {% endfor %}
       {% for item in follow_up_leaks %}
         {% if item.fix and item.severity | lower in ['high', 'medium', 'low'] %}
           {% set fl = item.finding | lower %}
           {% set tag = 'follow-up-leak' if ('email' in fl or 'newsletter' in fl or 'lead magnet' in fl or 'follow' in fl or 'capture' in fl) else ('database-leak' if ('social' in fl or 'blog' in fl or 'repeat' in fl) else '') %}
-          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Follow-Up Leak', 'monthly_loss': item.monthly_loss | default(0), 'id': 'fup-' ~ loop.index0, 'tag': tag}) %}{% endif %}
+          {% if all_actions.append({'finding': item.finding, 'fix': item.fix, 'severity': item.severity | lower, 'category': 'Follow-Up Leak', 'cat_filter': 'followup', 'monthly_loss': item.monthly_loss | default(0), 'id': 'fup-' ~ loop.index0, 'tag': tag}) %}{% endif %}
         {% endif %}
       {% endfor %}
 
@@ -1286,15 +1313,16 @@
       {% set low_actions = all_actions | selectattr('severity', 'equalto', 'low') | list %}
 
       {% if high_actions %}
-      <div class="action-severity-group">
+      <div class="action-severity-group" data-severity-group="high">
         <div class="action-severity-label high"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span> High Severity<span class="severity-check" id="check-high">&#x2713;</span></div>
         {% for item in high_actions %}
-        <div class="action-check-item" data-id="{{ item.id }}">
+        <div class="action-check-item" data-id="{{ item.id }}" data-category="{{ item.cat_filter }}">
           <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
           <div class="action-check-content">
             <label for="action-{{ item.id }}" class="action-check-title">{{ item.finding }}</label>
             <div class="action-check-fix">{{ item.fix }}</div>
             <div class="action-check-meta">
+              <span class="cat-badge cat-badge-{{ item.cat_filter }}">{{ item.category }}</span>
               {% if item.monthly_loss > 0 %}
               <span class="action-recovery">+${{ item.monthly_loss }}/mo</span>
               {% endif %}
@@ -1314,15 +1342,16 @@
       {% endif %}
 
       {% if medium_actions %}
-      <div class="action-severity-group">
+      <div class="action-severity-group" data-severity-group="medium">
         <div class="action-severity-label medium"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;"></span> Medium Severity<span class="severity-check" id="check-medium">&#x2713;</span></div>
         {% for item in medium_actions %}
-        <div class="action-check-item" data-id="{{ item.id }}">
+        <div class="action-check-item" data-id="{{ item.id }}" data-category="{{ item.cat_filter }}">
           <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
           <div class="action-check-content">
             <label for="action-{{ item.id }}" class="action-check-title">{{ item.finding }}</label>
             <div class="action-check-fix">{{ item.fix }}</div>
             <div class="action-check-meta">
+              <span class="cat-badge cat-badge-{{ item.cat_filter }}">{{ item.category }}</span>
               {% if item.monthly_loss > 0 %}
               <span class="action-recovery">+${{ item.monthly_loss }}/mo</span>
               {% endif %}
@@ -1342,15 +1371,16 @@
       {% endif %}
 
       {% if low_actions %}
-      <div class="action-severity-group">
+      <div class="action-severity-group" data-severity-group="low">
         <div class="action-severity-label low"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span> Low Severity<span class="severity-check" id="check-low">&#x2713;</span></div>
         {% for item in low_actions %}
-        <div class="action-check-item" data-id="{{ item.id }}">
+        <div class="action-check-item" data-id="{{ item.id }}" data-category="{{ item.cat_filter }}">
           <input type="checkbox" class="action-checkbox" id="action-{{ item.id }}" data-loss="{{ item.monthly_loss }}" data-id="{{ item.id }}" data-severity="{{ item.severity }}">
           <div class="action-check-content">
             <label for="action-{{ item.id }}" class="action-check-title">{{ item.finding }}</label>
             <div class="action-check-fix">{{ item.fix }}</div>
             <div class="action-check-meta">
+              <span class="cat-badge cat-badge-{{ item.cat_filter }}">{{ item.category }}</span>
               {% if item.monthly_loss > 0 %}
               <span class="action-recovery">+${{ item.monthly_loss }}/mo</span>
               {% endif %}
@@ -1658,13 +1688,43 @@
     // ==================== Filters ====================
     var activeCategoryFilter = 'all';
 
-    function applyFilters() {
+    function applyAllFilters() {
+      // Filter finding sections by category
       document.querySelectorAll('.section[data-category]').forEach(function(section) {
         var cat = section.getAttribute('data-category');
         if (activeCategoryFilter === 'all' || cat === activeCategoryFilter) {
           section.classList.remove('section-hidden');
         } else {
           section.classList.add('section-hidden');
+        }
+      });
+
+      // Filter action report items by both category AND severity
+      document.querySelectorAll('.action-check-item[data-category]').forEach(function(item) {
+        var cat = item.getAttribute('data-category');
+        var cb = item.querySelector('.action-checkbox');
+        var sev = cb ? cb.getAttribute('data-severity') : '';
+        var catMatch = (activeCategoryFilter === 'all' || cat === activeCategoryFilter);
+        var sevMatch = (activeFocus === 'all' || sev === activeFocus);
+        item.style.display = (catMatch && sevMatch) ? '' : 'none';
+      });
+
+      // Hide severity groups that have no visible items
+      document.querySelectorAll('.action-severity-group').forEach(function(group) {
+        var hasVisible = false;
+        group.querySelectorAll('.action-check-item').forEach(function(item) {
+          if (item.style.display !== 'none') hasVisible = true;
+        });
+        group.style.display = hasVisible ? '' : 'none';
+      });
+
+      // Filter finding cards by severity
+      document.querySelectorAll('.finding[data-severity]').forEach(function(card) {
+        var sev = card.getAttribute('data-severity');
+        if (activeFocus === 'all' || sev === activeFocus) {
+          card.classList.remove('finding-hidden');
+        } else {
+          card.classList.add('finding-hidden');
         }
       });
     }
@@ -1674,11 +1734,9 @@
         document.querySelectorAll('#category-filters .filter-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         activeCategoryFilter = btn.getAttribute('data-filter');
-        applyFilters();
+        applyAllFilters();
       });
     });
-
-    // Severity filtering is now handled by the Focus Bar above
 
     // ==================== Confetti + Floating Text ====================
     function launchConfetti(originX, originY) {
@@ -1954,49 +2012,30 @@
           allBtn.style.color = '#94a3b8';
         }
 
-        applyFocusFilter();
+        applyAllFilters();
+
+        // Update focus summary
+        var count = 0;
+        var totalImpact = 0;
+        document.querySelectorAll('.finding[data-severity]').forEach(function(card) {
+          if (!card.classList.contains('finding-hidden')) {
+            count++;
+            totalImpact += parseInt(card.getAttribute('data-loss') || 0, 10);
+          }
+        });
+        var summaryEl = document.getElementById('focus-summary');
+        var workBtn = document.getElementById('focus-work-btn');
+        if (activeFocus !== 'all') {
+          var label = activeFocus.charAt(0).toUpperCase() + activeFocus.slice(1);
+          summaryEl.style.display = 'block';
+          summaryEl.textContent = 'Showing ' + count + ' ' + label.toUpperCase() + ' priority leak' + (count !== 1 ? 's' : '') + ' \u2014 Total impact: $' + totalImpact.toLocaleString() + '/month';
+          workBtn.style.display = 'inline-block';
+        } else {
+          summaryEl.style.display = 'none';
+          workBtn.style.display = 'none';
+        }
       });
     });
-
-    function applyFocusFilter() {
-      var findings = document.querySelectorAll('.finding[data-severity]');
-      var count = 0;
-      var totalImpact = 0;
-
-      findings.forEach(function(card) {
-        var sev = card.getAttribute('data-severity');
-        if (activeFocus === 'all' || sev === activeFocus) {
-          card.classList.remove('finding-hidden');
-          count++;
-          totalImpact += parseInt(card.getAttribute('data-loss') || 0, 10);
-        } else {
-          card.classList.add('finding-hidden');
-        }
-      });
-
-      // Also filter action items
-      document.querySelectorAll('.action-check-item').forEach(function(item) {
-        var cb = item.querySelector('.action-checkbox');
-        var sev = cb ? cb.getAttribute('data-severity') : '';
-        if (activeFocus === 'all' || sev === activeFocus) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-
-      var summaryEl = document.getElementById('focus-summary');
-      var workBtn = document.getElementById('focus-work-btn');
-      if (activeFocus !== 'all') {
-        var label = activeFocus.charAt(0).toUpperCase() + activeFocus.slice(1);
-        summaryEl.style.display = 'block';
-        summaryEl.textContent = 'Showing ' + count + ' ' + label.toUpperCase() + ' priority leak' + (count !== 1 ? 's' : '') + ' \u2014 Total impact: $' + totalImpact.toLocaleString() + '/month';
-        workBtn.style.display = 'inline-block';
-      } else {
-        summaryEl.style.display = 'none';
-        workBtn.style.display = 'none';
-      }
-    }
 
     // "Work on these this month" button
     document.getElementById('focus-work-btn').addEventListener('click', function() {

@@ -947,7 +947,8 @@
       <div class="header-right">
         <div class="savings-wrap">
           <div class="savings-amount" id="savings-counter" data-current="0">$0</div>
-          <div class="savings-label">Monthly Revenue<br>Recovered</div>
+          <div style="font-size:0.58rem;color:#64748b;margin-top:0.3rem;text-align:center;">Check off fixes to track savings</div>
+          <div class="savings-label">Revenue Recovered<br>So Far</div>
         </div>
         <div class="score-wrap" id="grade-wrap">
           {% set high_count = [] %}
@@ -1106,7 +1107,7 @@
     <!-- Unlock Card (shown when gated) -->
     <div class="unlock-card" id="unlock-card"{% if gated_count == 0 %} style="display:none;"{% endif %}>
       <h3 id="unlock-headline">You're seeing {{ free_findings | length }} of {{ all_findings | length }} leaks.</h3>
-      <p class="unlock-sub">The other {{ gated_count }} are costing you an estimated ${{ remaining_loss | default(0) }}/month.</p>
+      <p class="unlock-sub">Your free audit is complete. Enter your email to access your full results &mdash; the other {{ gated_count }} leak{{ 's' if gated_count != 1 else '' }} are costing you an estimated ${{ remaining_loss | default(0) }}/month.</p>
       <ul class="unlock-benefits" id="unlock-benefits">
         <li><span class="benefit-check">&#x2713;</span> See all {{ gated_count }} remaining leak{{ 's' if gated_count != 1 else '' }} with exact dollar amounts</li>
         <li><span class="benefit-check">&#x2713;</span> Get your full prioritized fix checklist</li>

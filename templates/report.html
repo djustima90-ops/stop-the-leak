@@ -925,6 +925,7 @@
         <span class="section-title-icon">1</span>
         Lead Leaks
       </h2>
+      {{ lead_leaks|length }} findings
       {% for item in lead_leaks %}
       <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
@@ -951,6 +952,7 @@
         <span class="section-title-icon">2</span>
         Conversion Leaks
       </h2>
+      {{ conversion_leaks|length }} findings
       {% for item in conversion_leaks %}
       <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">
@@ -977,6 +979,7 @@
         <span class="section-title-icon">3</span>
         Follow-Up Leaks
       </h2>
+      {{ follow_up_leaks|length }} findings
       {% for item in follow_up_leaks %}
       <div class="finding" data-severity="{{ item.severity | lower }}" data-loss="{{ item.monthly_loss | default(0) }}">
         <div class="finding-header">

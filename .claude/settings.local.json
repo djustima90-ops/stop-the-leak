@@ -25,7 +25,8 @@
       "Bash(curl:*)",
       "Bash(pip3 -q install pytest)",
       "Bash(pip install:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(gh api:*)"
     ]
   }
 }

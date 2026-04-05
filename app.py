@@ -115,10 +115,51 @@ def _error_page(message: str, status: int = 400):
     return render_template("error.html", msg=message), status
 
 
+def _log_audit(url: str, industry_name: str, grade: str,
+               duration_seconds: float, success: bool, error_message: str = "") -> str:
+    """Insert one row into the Supabase audit_log table. Never raises.
+
+    Returns a status string: "ok", "error: <detail>". Callers can log or
+    return this; by contract this function still never raises.
+    """
+    import sys
+    print(
+        f"[audit_log] fired url={url!r} industry={industry_name!r} grade={grade!r} "
+        f"duration={duration_seconds:.2f}s success={success} err={error_message!r}",
+        flush=True, file=sys.stderr,
+    )
+    try:
+        client = get_supabase()
+        resp = client.table("audit_log").insert({
+            "url": url or "",
+            "industry": industry_name or "",
+            "grade": grade or "",
+            "duration_seconds": round(duration_seconds, 2),
+            "success": bool(success),
+            "error_message": (error_message or "")[:1000],
+        }).execute()
+        rows = len(resp.data or [])
+        print(f"[audit_log] insert OK rows={rows}", flush=True, file=sys.stderr)
+        return "ok" if rows else "error: no rows returned"
+    except Exception as e:
+        detail = f"{type(e).__name__}: {e}"
+        print(f"[audit_log] INSERT FAILED: {detail}", flush=True, file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()
+        return f"error: {detail}"
+
+
 @app.route("/audit", methods=["POST"])
 @limiter.limit("10 per hour")
 def audit():
     """Run the full leak audit pipeline and return the report."""
+    start = time.time()
+    url = ""
+    industry_name = ""
+    grade = ""
+    success = False
+    error_message = ""
+
     try:
         url = request.form["url"].strip()
 
@@ -129,6 +170,7 @@ def audit():
         # URL validation — blocks localhost, private IPs, bad schemes, etc.
         is_valid, err = validate_url(url)
         if not is_valid:
+            error_message = f"invalid_url: {err}"
             return _error_page(err, 400)
 
         parsed = urlparse(url)
@@ -149,6 +191,7 @@ def audit():
             html = scrape_site(url)
         except Exception as e:
             print(f"[Audit] Scrape failed for {url}: {e}")
+            error_message = f"scrape_failed: {type(e).__name__}: {e}"
             if "403" in str(e):
                 return _error_page(
                     "This website is blocking automated access. Try a different URL.",
@@ -168,11 +211,13 @@ def audit():
             industry_future = executor.submit(detect_industry, content)
             brand = brand_future.result() or {}
             industry = industry_future.result()
+        industry_name = (industry or {}).get("name", "")
 
         # Claude API call with typed error handling
         try:
             analysis = call_claude(content, industry)
         except anthropic.APITimeoutError:
+            error_message = "claude_timeout"
             return _error_page("Audit timed out. Please try again.", 504)
         except anthropic.RateLimitError:
             time.sleep(60)
@@ -180,9 +225,11 @@ def audit():
                 analysis = call_claude(content, industry)
             except Exception as e:
                 print(f"[Audit] Claude retry failed: {type(e).__name__}: {e}")
+                error_message = f"claude_retry_failed: {type(e).__name__}: {e}"
                 return _error_page("Something went wrong.", 500)
         except anthropic.APIError as e:
             print(f"[Audit] Claude API error: {type(e).__name__}: {e}")
+            error_message = f"claude_api_error: {type(e).__name__}: {e}"
             return _error_page("Something went wrong.", 500)
 
         timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
@@ -193,14 +240,25 @@ def audit():
         grade = (analysis or {}).get("grade", "") if isinstance(analysis, dict) else ""
         report_id = save_output(report_html, business_name, url=url, grade=grade)
 
+        success = True
         return redirect(url_for("view_report", report_id=report_id))
 
     except Exception as e:
         print(f"[Audit] Unexpected error: {type(e).__name__}: {e}")
         traceback.print_exc()
+        error_message = f"unexpected: {type(e).__name__}: {e}"
         return _error_page(
             "An unexpected error occurred while generating your report. Please try again.",
             500,
+        )
+    finally:
+        _log_audit(
+            url=url,
+            industry_name=industry_name,
+            grade=grade,
+            duration_seconds=time.time() - start,
+            success=success,
+            error_message=error_message,
         )
 
 
@@ -307,6 +365,17 @@ def setup_db():
       url text,
       grade text,
       html text
+    );
+
+    create table if not exists audit_log (
+      id uuid primary key default gen_random_uuid(),
+      created_at timestamptz not null default now(),
+      url text,
+      industry text,
+      grade text,
+      duration_seconds numeric,
+      success boolean,
+      error_message text
     );
     """.strip()
 
@@ -432,10 +501,24 @@ def ratelimit_handler(e):
     ), 429
 
 
+@app.route("/test-log")
+def test_log():
+    """Directly exercise _log_audit with dummy data and return the result."""
+    status = _log_audit(
+        url="https://test.example.com",
+        industry_name="test_industry",
+        grade="A",
+        duration_seconds=1.23,
+        success=True,
+        error_message="test-log route dummy call",
+    )
+    return jsonify({"status": status, "ok": status == "ok"}), (200 if status == "ok" else 500)
+
+
 @app.route("/health")
 def health():
     """Return env var status for debugging (values hidden)."""
-    keys = ["RESEND_API_KEY", "ANTHROPIC_API_KEY", "SUPABASE_URL", "SUPABASE_KEY", "SENTRY_DSN"]
+    keys = ["RESEND_API_KEY", "ANTHROPIC_API_KEY", "SUPABASE_URL", "SUPABASE_KEY", "SENTRY_DSN", "FIRECRAWL_API_KEY"]
     status = {k: bool(os.getenv(k)) for k in keys}
     return jsonify({"env": status})
 

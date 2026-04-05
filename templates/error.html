@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Something Went Wrong — Stop the Leak</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #09101d;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 2rem;
+    }
+    .wrap {
+      max-width: 560px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      margin-bottom: 2.5rem;
+    }
+    .logo .red { color: #ef4444; }
+    .title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 0 0 1rem;
+      line-height: 1.2;
+    }
+    .title span { color: #ef4444; }
+    .msg {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin: 0 0 2.5rem;
+    }
+    .cta {
+      display: inline-block;
+      background: #dc2626;
+      color: #fff;
+      padding: 0.95rem 2.2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: background 0.15s ease;
+    }
+    .cta:hover { background: #ef4444; }
+    .note {
+      color: #475569;
+      font-size: 0.85rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo"><span class="red">Stop</span> the <span class="red">Leak</span></div>
+    <h1 class="title">Something <span>went wrong</span></h1>
+    <p class="msg">{{ msg or "We hit an unexpected error while generating your report." }}</p>
+    <a class="cta" href="/">&larr; Try Again</a>
+    <p class="note">If this keeps happening, reach out: hello@stoptheleak.com</p>
+  </div>
+</body>
+</html>

@@ -1,6 +1,5 @@
-"""Parse Claude's audit analysis and render the HTML report."""
+"""Render the HTML report from Claude's structured audit output."""
 
-import re
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -8,126 +7,35 @@ from jinja2 import Environment, FileSystemLoader
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 
-def _parse_findings(section_text: str) -> list[dict]:
-    """Parse a section's finding blocks separated by '---'.
+_CATEGORY_KEYS = {
+    "Lead Leak": "lead_leaks",
+    "Conversion Leak": "conversion_leaks",
+    "Follow-Up Leak": "follow_up_leaks",
+}
 
-    Returns:
-        List of dicts with keys: finding, severity, impact, fix, monthly_loss.
+
+def _bucket_findings(findings: list[dict]) -> dict:
+    """Split the flat findings list into the three category buckets the
+    template expects, and remap `title` → `finding` for template compatibility.
     """
-    blocks = re.split(r"\n---\s*\n", section_text.strip())
-    findings = []
-    for block in blocks:
-        finding = {}
-        for key in ("FINDING", "SEVERITY", "IMPACT", "FIX"):
-            match = re.search(rf"{key}:\s*(.+)", block)
-            finding[key.lower()] = match.group(1).strip() if match else ""
-        # Parse monthly loss estimate
-        loss_match = re.search(r"MONTHLY_LOSS_ESTIMATE:\s*\$?([\d,]+)", block)
-        finding["monthly_loss"] = (
-            int(loss_match.group(1).replace(",", "")) if loss_match else 0
-        )
-        if finding["finding"]:
-            findings.append(finding)
-    return findings
-
-
-def _parse_analysis(analysis: str) -> dict:
-    """Parse the full Claude analysis string into structured sections.
-
-    Returns:
-        Dict with keys: executive_summary, lead_leaks, conversion_leaks,
-        follow_up_leaks, priority_fixes, leak_count, total_monthly_loss.
-    """
-    print(f"[generate_report] raw analysis length: {len(analysis)}")
-
-    result = {}
-
-    # Executive summary
-    try:
-        match = re.search(
-            r"EXECUTIVE_SUMMARY:\s*\n(.+?)(?=\nLEAD_LEAKS:)", analysis, re.DOTALL
-        )
-        result["executive_summary"] = match.group(1).strip() if match else ""
-    except Exception as e:
-        print(f"[generate_report] Failed to parse executive_summary: {e}")
-        result["executive_summary"] = ""
-
-    # Lead leaks
-    try:
-        match = re.search(
-            r"LEAD_LEAKS:\s*\n(.+?)(?=\nCONVERSION_LEAKS:)", analysis, re.DOTALL
-        )
-        result["lead_leaks"] = _parse_findings(match.group(1)) if match else []
-    except Exception as e:
-        print(f"[generate_report] Failed to parse lead_leaks: {e}")
-        result["lead_leaks"] = []
-
-    # Conversion leaks
-    try:
-        match = re.search(
-            r"CONVERSION_LEAKS:\s*\n(.+?)(?=\nFOLLOW_UP_LEAKS:)", analysis, re.DOTALL
-        )
-        result["conversion_leaks"] = _parse_findings(match.group(1)) if match else []
-    except Exception as e:
-        print(f"[generate_report] Failed to parse conversion_leaks: {e}")
-        result["conversion_leaks"] = []
-
-    # Follow-up leaks
-    try:
-        match = re.search(
-            r"FOLLOW_UP_LEAKS:\s*\n(.+?)(?=\nPRIORITY_FIXES:)", analysis, re.DOTALL
-        )
-        result["follow_up_leaks"] = _parse_findings(match.group(1)) if match else []
-    except Exception as e:
-        print(f"[generate_report] Failed to parse follow_up_leaks: {e}")
-        result["follow_up_leaks"] = []
-
-    # Priority fixes
-    try:
-        fixes = re.findall(r"\d+\.\s*(.+)", analysis.split("PRIORITY_FIXES:")[-1])
-        result["priority_fixes"] = [f.strip() for f in fixes[:3]]
-    except Exception as e:
-        print(f"[generate_report] Failed to parse priority_fixes: {e}")
-        result["priority_fixes"] = []
-
-    # Leak count
-    try:
-        result["leak_count"] = {}
-        for label, key in [
-            ("Lead Leaks", "lead"),
-            ("Conversion Leaks", "conversion"),
-            ("Follow-Up Leaks", "follow_up"),
-            ("Total", "total"),
-        ]:
-            match = re.search(rf"{label}:\s*(\d+)", analysis)
-            result["leak_count"][key] = int(match.group(1)) if match else 0
-    except Exception as e:
-        print(f"[generate_report] Failed to parse leak_count: {e}")
-        result["leak_count"] = {"lead": 0, "conversion": 0, "follow_up": 0, "total": 0}
-
-    # Total monthly loss
-    try:
-        loss_match = re.search(r"TOTAL_MONTHLY_LOSS:\s*\$?([\d,]+)", analysis)
-        result["total_monthly_loss"] = (
-            int(loss_match.group(1).replace(",", "")) if loss_match else 0
-        )
-    except Exception as e:
-        print(f"[generate_report] Failed to parse total_monthly_loss: {e}")
-        result["total_monthly_loss"] = 0
-
-    total_findings = (
-        len(result.get("lead_leaks", []))
-        + len(result.get("conversion_leaks", []))
-        + len(result.get("follow_up_leaks", []))
-    )
-    if total_findings == 0:
-        print("[generate_report] WARNING: no findings parsed")
-
-    return result
+    buckets = {"lead_leaks": [], "conversion_leaks": [], "follow_up_leaks": []}
+    for f in findings or []:
+        bucket = _CATEGORY_KEYS.get(f.get("category"))
+        if not bucket:
+            continue
+        buckets[bucket].append({
+            "finding": f.get("title", ""),
+            "severity": f.get("severity", ""),
+            "impact": f.get("impact", ""),
+            "fix": f.get("fix", ""),
+            "monthly_loss": int(f.get("monthly_loss") or 0),
+            "category": f.get("category", ""),
+        })
+    return buckets
 
 
 def _fallback_report(business_name: str, url: str, timestamp: str, error_detail: str = "") -> str:
-    """Return a minimal valid HTML report when parsing/rendering fails."""
+    """Return a minimal valid HTML report when rendering fails."""
     safe_name = business_name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     safe_url = url.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     return f"""<!DOCTYPE html>
@@ -139,55 +47,53 @@ a{{color:#60a5fa;}}</style></head><body>
 <h1>Leak Report</h1>
 <div class="card"><p><strong>Business:</strong> {safe_name}</p><p><strong>URL:</strong> {safe_url}</p>
 <p><strong>Generated:</strong> {timestamp}</p></div>
-<div class="card"><h2 style="color:#f59e0b;">Analysis Could Not Be Fully Parsed</h2>
-<p>The AI audit completed, but the report could not be formatted properly. This usually means the AI returned an unexpected format.</p>
-<p>Please try running the audit again. If the problem persists, contact support.</p>
+<div class="card"><h2 style="color:#f59e0b;">Report Rendering Failed</h2>
+<p>The AI audit completed, but the report could not be rendered. Please try again.</p>
 {f'<p style="color:#64748b;font-size:0.85rem;margin-top:1rem;">Debug: {error_detail}</p>' if error_detail else ''}
 </div></body></html>"""
 
 
 def generate_report(
-    analysis: str, business_name: str, url: str, timestamp: str,
+    analysis: dict, business_name: str, url: str, timestamp: str,
     industry=None, brand=None,
 ) -> str:
-    """Parse Claude's analysis and render the HTML report.
+    """Render the HTML report from a structured audit dict.
 
     Args:
-        analysis: Raw analysis string from call_claude.
+        analysis: Structured audit dict from call_claude (tool_use output):
+            {executive_summary, grade, findings: [{title, category, severity,
+             monthly_loss, impact, fix}, ...]}
         business_name: Name of the business being audited.
         url: URL that was audited.
         timestamp: Human-readable timestamp string.
-        industry: Optional dict of industry-specific data from detect_industry.
+        industry: Optional dict of industry-specific data.
         brand: Optional dict with logo_url, primary_color, business_name.
 
     Returns:
         Rendered HTML string.
     """
     try:
-        print(f"[generate_report] Analysis length: {len(analysis) if analysis else 0}")
-        print(f"[generate_report] Analysis first 500 chars: {repr(analysis[:500]) if analysis else 'EMPTY'}")
+        if not analysis or not isinstance(analysis, dict):
+            return _fallback_report(business_name, url, timestamp, "Empty analysis")
 
-        if not analysis or not analysis.strip():
-            print("[generate_report] Empty analysis received, returning fallback")
-            return _fallback_report(business_name, url, timestamp, "Empty analysis from AI")
+        findings = analysis.get("findings", []) or []
+        buckets = _bucket_findings(findings)
 
-        print(f"[DEBUG] Raw analysis first 1000 chars: {analysis[:1000]}")
+        total_monthly_loss = sum(f["monthly_loss"] for f in findings if f.get("monthly_loss"))
+        total_monthly_loss = int(total_monthly_loss)
 
-        parsed = _parse_analysis(analysis)
+        leak_count = {
+            "lead": len(buckets["lead_leaks"]),
+            "conversion": len(buckets["conversion_leaks"]),
+            "follow_up": len(buckets["follow_up_leaks"]),
+            "total": len(findings),
+        }
 
-        print(f"[DEBUG] Lead leaks parsed: {len(parsed.get('lead_leaks', []))}")
-        print(f"[DEBUG] Conversion leaks parsed: {len(parsed.get('conversion_leaks', []))}")
-        print(f"[DEBUG] Follow-up leaks parsed: {len(parsed.get('follow_up_leaks', []))}")
-        print(f"[DEBUG] Executive summary length: {len(parsed.get('executive_summary', ''))}")
-
-        # Ensure all expected keys exist with safe defaults
-        parsed.setdefault("executive_summary", "")
-        parsed.setdefault("lead_leaks", [])
-        parsed.setdefault("conversion_leaks", [])
-        parsed.setdefault("follow_up_leaks", [])
-        parsed.setdefault("priority_fixes", [])
-        parsed.setdefault("leak_count", {"lead": 0, "conversion": 0, "follow_up": 0, "total": 0})
-        parsed.setdefault("total_monthly_loss", 0)
+        # Priority fixes: top 3 findings by monthly_loss
+        top_three = sorted(
+            findings, key=lambda f: f.get("monthly_loss") or 0, reverse=True
+        )[:3]
+        priority_fixes = [f.get("fix", "") for f in top_three if f.get("fix")]
 
         env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), autoescape=True)
         template = env.get_template("report.html")
@@ -198,11 +104,17 @@ def generate_report(
             timestamp=timestamp or "",
             industry=industry or {},
             brand=brand or {},
-            **parsed,
+            executive_summary=analysis.get("executive_summary", ""),
+            grade=analysis.get("grade", ""),
+            lead_leaks=buckets["lead_leaks"],
+            conversion_leaks=buckets["conversion_leaks"],
+            follow_up_leaks=buckets["follow_up_leaks"],
+            priority_fixes=priority_fixes,
+            leak_count=leak_count,
+            total_monthly_loss=total_monthly_loss,
         )
     except Exception as e:
         print(f"[generate_report] FATAL ERROR: {type(e).__name__}: {e}")
-        print(f"[generate_report] Analysis was: {repr(analysis[:1000]) if analysis else 'None'}")
         return _fallback_report(
             business_name or "Unknown Business",
             url or "",

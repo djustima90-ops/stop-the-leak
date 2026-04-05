@@ -1,33 +1,37 @@
-"""Save a rendered HTML report to the outputs directory."""
+"""Save a rendered HTML report to the Supabase reports table."""
 
-import os
-import re
-from datetime import datetime
-from pathlib import Path
-
-# Use /tmp on Vercel (read-only filesystem), local outputs/ otherwise
-if os.environ.get("VERCEL"):
-    OUTPUTS_DIR = Path("/tmp/outputs")
-else:
-    OUTPUTS_DIR = Path(__file__).resolve().parent.parent / "outputs"
+from tools.supabase_client import get_supabase
 
 
-def save_output(html: str, business_name: str) -> Path:
-    """Save rendered HTML report to a file in the outputs directory.
+def save_output(
+    html: str,
+    business_name: str,
+    url: str = "",
+    grade: str = "",
+) -> str:
+    """Insert the rendered report into Supabase and return its uuid.
 
     Args:
         html: Rendered HTML report string.
-        business_name: Name of the business (used to build the filename slug).
+        business_name: Business display name for this report.
+        url: URL that was audited.
+        grade: Letter grade (A/B/C/D/F) assigned to the report.
 
     Returns:
-        Path to the saved file.
+        The uuid (as a string) of the inserted report row.
     """
-    slug = re.sub(r"[^a-z0-9]+", "_", business_name.lower()).strip("_")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{slug}_{timestamp}.html"
-
-    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-    filepath = OUTPUTS_DIR / filename
-    filepath.write_text(html, encoding="utf-8")
-
-    return filepath
+    client = get_supabase()
+    response = (
+        client.table("reports")
+        .insert({
+            "business_name": business_name,
+            "url": url,
+            "grade": grade,
+            "html": html,
+        })
+        .execute()
+    )
+    rows = response.data or []
+    if not rows:
+        raise RuntimeError("Supabase reports insert returned no rows.")
+    return rows[0]["id"]

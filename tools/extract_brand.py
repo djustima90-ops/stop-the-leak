@@ -1,28 +1,52 @@
-"""Extract brand elements (favicon, primary color, name) from a business homepage."""
+"""Extract brand elements (favicon, primary color, name) from a business homepage.
 
+Brand extraction is best-effort and MUST never block the audit pipeline.
+The public `extract_brand()` runs the work in a thread with a 3-second cap
+and returns an empty-ish dict on any timeout or failure.
+"""
+
+import concurrent.futures
 import re
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
 
+_EMPTY = {
+    "logo_url": None,
+    "primary_color": None,
+    "business_name": None,
+    "all_logos": [],
+}
+
+_BRAND_TIMEOUT_SECONDS = 3
+
 
 def extract_brand(url: str) -> dict:
-    """Fetch a homepage and extract brand signals.
+    """Fetch a homepage and extract brand signals with a hard 3s timeout.
 
     Args:
         url: The business homepage URL.
 
     Returns:
         Dict with keys: logo_url, primary_color, business_name, all_logos.
-        Missing values default to None (all_logos defaults to []).
+        On timeout or any failure, returns an empty-valued dict — never raises.
     """
-    result = {
-        "logo_url": None,
-        "primary_color": None,
-        "business_name": None,
-        "all_logos": [],
-    }
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_extract_brand_sync, url)
+        try:
+            return future.result(timeout=_BRAND_TIMEOUT_SECONDS)
+        except concurrent.futures.TimeoutError:
+            print(f"[extract_brand] Timeout after {_BRAND_TIMEOUT_SECONDS}s for {url}")
+            return dict(_EMPTY)
+        except Exception as e:
+            print(f"[extract_brand] Error for {url}: {type(e).__name__}: {e}")
+            return dict(_EMPTY)
+
+
+def _extract_brand_sync(url: str) -> dict:
+    """Inner synchronous implementation. Never called directly from app code."""
+    result = dict(_EMPTY)
 
     try:
         headers = {
@@ -32,7 +56,7 @@ def extract_brand(url: str) -> dict:
                 "Chrome/120.0.0.0 Safari/537.36"
             )
         }
-        resp = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+        resp = requests.get(url, headers=headers, timeout=3, allow_redirects=True)
         resp.raise_for_status()
     except Exception:
         return result

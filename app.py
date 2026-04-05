@@ -1,13 +1,14 @@
 """Stop the Leak — Flask app tying the audit pipeline together."""
 
-import csv
+import concurrent.futures
 import ipaddress
 import os
-import uuid
+import time
+import traceback
 from datetime import datetime
-from pathlib import Path
 from urllib.parse import urlparse
 
+import anthropic
 import requests as http_requests
 import resend
 from dotenv import load_dotenv
@@ -23,9 +24,24 @@ from tools.detect_industry import detect_industry
 from tools.call_claude import call_claude
 from tools.generate_report import generate_report
 from tools.save_output import save_output
+from tools.supabase_client import get_supabase
 
 load_dotenv()
 resend.api_key = os.getenv("RESEND_API_KEY")
+
+# ── Sentry init (optional — app starts normally without it) ──────────────
+try:
+    import sentry_sdk
+    sentry_dsn = os.getenv("SENTRY_DSN")
+    if sentry_dsn:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            traces_sample_rate=0.1,
+            send_default_pii=False,
+        )
+        print("[Sentry] Initialized")
+except Exception as e:
+    print(f"[Sentry] Failed to initialize: {e}")
 
 app = Flask(__name__)
 limiter = Limiter(
@@ -35,9 +51,57 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-LEADS_CSV = Path(__file__).resolve().parent / "leads.csv"
-REPORTS_DIR = Path("/tmp/reports")
-REPORTS_DIR.mkdir(exist_ok=True)
+
+# ── URL validation ───────────────────────────────────────────────────────
+
+_BLOCKED_HOSTNAMES = {"localhost", "0.0.0.0", ""}
+_BLOCKED_SCHEMES = {"file", "javascript", "data", "ftp"}
+
+
+def validate_url(url: str) -> tuple[bool, str]:
+    """Validate a user-submitted URL.
+
+    Blocks: localhost, 127.0.0.1, 192.168.x.x, 10.x.x.x, file://, javascript:,
+            data:, and any private / loopback / reserved IP.
+    Requires: http(s) scheme, non-empty hostname, a real TLD.
+
+    Returns:
+        (is_valid, error_message). error_message is "" when valid.
+    """
+    if not url or not isinstance(url, str):
+        return False, "Please enter a URL."
+    url = url.strip()
+    if len(url) > 500:
+        return False, "That URL is too long."
+
+    # Reject dangerous schemes before urlparse (javascript:, data:, file:)
+    lowered = url.lower()
+    for bad in _BLOCKED_SCHEMES:
+        if lowered.startswith(f"{bad}:"):
+            return False, "That URL doesn't look like a public website."
+
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return False, "URL must start with http:// or https://"
+
+    hostname = (parsed.hostname or "").lower()
+    if not hostname or hostname in _BLOCKED_HOSTNAMES:
+        return False, "That URL doesn't look like a public website."
+
+    # Block private/loopback/reserved IPs (covers 127.0.0.1, 192.168.x.x, 10.x.x.x)
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
+            return False, "That URL doesn't look like a public website."
+    except ValueError:
+        # Not an IP — must be a hostname with a TLD
+        if "." not in hostname:
+            return False, "That URL doesn't look like a public website."
+        tld = hostname.rsplit(".", 1)[-1]
+        if not tld or len(tld) < 2 or not tld.isalpha():
+            return False, "That URL doesn't look like a public website."
+
+    return True, ""
 
 
 @app.route("/")
@@ -46,31 +110,9 @@ def index():
     return render_template("index.html")
 
 
-def _error_page(title, message, details=""):
-    """Return a styled, on-brand error page."""
-    detail_html = f'<p style="color:#94a3b8;font-size:0.95rem;line-height:1.7;white-space:pre-line;">{details}</p>' if details else ""
-    return (
-        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
-        '<title>Error — Stop the Leak</title>'
-        '<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
-        'background:#09101d;color:#e2e8f0;display:flex;align-items:center;justify-content:center;'
-        'min-height:100vh;margin:0;text-align:center;padding:2rem;}'
-        '.wrap{max-width:520px}'
-        '.title{font-size:1.8rem;font-weight:800;margin-bottom:1rem;}'
-        '.title span{color:#ef4444}'
-        'p{color:#94a3b8;line-height:1.7;margin-bottom:1.5rem;}'
-        'ul{text-align:left;display:inline-block;color:#94a3b8;line-height:2;margin-bottom:2rem;padding-left:1.2rem;}'
-        'a{display:inline-block;background:#dc2626;color:#fff;padding:0.8rem 2rem;'
-        'border-radius:8px;text-decoration:none;font-weight:700;}'
-        'a:hover{background:#ef4444}</style></head>'
-        f'<body><div class="wrap">'
-        f'<div class="title"><span>{title}</span></div>'
-        f'<p>{message}</p>'
-        f'{detail_html}'
-        f'<a href="/">&larr; Try Again</a>'
-        f'</div></body></html>'
-    )
+def _error_page(message: str, status: int = 400):
+    """Render the standard error template."""
+    return render_template("error.html", msg=message), status
 
 
 @app.route("/audit", methods=["POST"])
@@ -80,45 +122,16 @@ def audit():
     try:
         url = request.form["url"].strip()
 
-        # URL normalization: allow bare domains like "facebook.com"
+        # Allow bare domains like "facebook.com"
         if not url.startswith("http://") and not url.startswith("https://"):
-            if url.startswith("www."):
-                url = "https://" + url
-            else:
-                url = "https://" + url
+            url = "https://" + url
 
-        # Input validation
-        if len(url) > 500:
-            return _error_page(
-                "That URL doesn't look like a public website.",
-                "Please enter a valid business URL.",
-            ), 400
+        # URL validation — blocks localhost, private IPs, bad schemes, etc.
+        is_valid, err = validate_url(url)
+        if not is_valid:
+            return _error_page(err, 400)
 
         parsed = urlparse(url)
-        if parsed.scheme not in ("http", "https"):
-            return _error_page(
-                "That URL doesn't look like a public website.",
-                "Please enter a valid business URL.",
-            ), 400
-
-        hostname = parsed.hostname or ""
-        if hostname in ("localhost", "127.0.0.1", "0.0.0.0", ""):
-            return _error_page(
-                "That URL doesn't look like a public website.",
-                "Please enter a valid business URL.",
-            ), 400
-
-        try:
-            ip = ipaddress.ip_address(hostname)
-            if ip.is_private or ip.is_loopback or ip.is_reserved:
-                return _error_page(
-                    "That URL doesn't look like a public website.",
-                    "Please enter a valid business URL.",
-                ), 400
-        except ValueError:
-            pass  # hostname is not an IP — that's fine
-
-        # Strip query parameters and fragments
         url = parsed._replace(query="", fragment="").geturl()
 
         # Try https first, fall back to http
@@ -134,92 +147,96 @@ def audit():
 
         try:
             html = scrape_site(url)
-        except (ConnectionError, http_requests.exceptions.ConnectionError,
-                http_requests.exceptions.Timeout,
-                http_requests.exceptions.MissingSchema,
-                http_requests.exceptions.HTTPError) as e:
+        except Exception as e:
             print(f"[Audit] Scrape failed for {url}: {e}")
             if "403" in str(e):
                 return _error_page(
-                    "Access Blocked",
-                    "This website is blocking automated access. "
-                    "Many sites do this to prevent scraping. Try a different URL.",
-                ), 403
+                    "This website is blocking automated access. Try a different URL.",
+                    403,
+                )
             return _error_page(
-                "We couldn't reach that website.",
-                "This usually means:",
-                details=(
-                    '<ul>'
-                    '<li>The URL may be misspelled</li>'
-                    '<li>The website is currently down</li>'
-                    '<li>The site is blocking automated requests</li>'
-                    '</ul>'
-                    '<p style="color:#64748b;font-size:0.85rem;">Please check the URL and try again.</p>'
-                ),
-            ), 502
-        except Exception as e:
-            print(f"[Audit] Scrape error for {url}: {e}")
-            return _error_page(
-                "We couldn't reach that website.",
-                "This usually means:",
-                details=(
-                    '<ul>'
-                    '<li>The URL may be misspelled</li>'
-                    '<li>The website is currently down</li>'
-                    '<li>The site is blocking automated requests</li>'
-                    '</ul>'
-                    '<p style="color:#64748b;font-size:0.85rem;">Please check the URL and try again.</p>'
-                ),
-            ), 502
+                "We couldn't reach that website. Please check the URL and try again.",
+                502,
+            )
 
         content = extract_content(html, url)
-        brand = extract_brand(url)
-        industry = detect_industry(content)
-        analysis = call_claude(content, industry)
+
+        # Parallel pipeline: brand extraction and industry detection are
+        # independent — run them simultaneously.
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            brand_future = executor.submit(extract_brand, url)
+            industry_future = executor.submit(detect_industry, content)
+            brand = brand_future.result() or {}
+            industry = industry_future.result()
+
+        # Claude API call with typed error handling
+        try:
+            analysis = call_claude(content, industry)
+        except anthropic.APITimeoutError:
+            return _error_page("Audit timed out. Please try again.", 504)
+        except anthropic.RateLimitError:
+            time.sleep(60)
+            try:
+                analysis = call_claude(content, industry)
+            except Exception as e:
+                print(f"[Audit] Claude retry failed: {type(e).__name__}: {e}")
+                return _error_page("Something went wrong.", 500)
+        except anthropic.APIError as e:
+            print(f"[Audit] Claude API error: {type(e).__name__}: {e}")
+            return _error_page("Something went wrong.", 500)
 
         timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
         report_html = generate_report(
             analysis, business_name, url, timestamp, industry, brand,
         )
-        save_output(report_html, business_name)
 
-        # Save to a temp file so the report survives page reload
-        report_id = uuid.uuid4().hex[:12]
-        report_file = REPORTS_DIR / f"{report_id}.html"
-        report_file.write_text(report_html, encoding="utf-8")
+        grade = (analysis or {}).get("grade", "") if isinstance(analysis, dict) else ""
+        report_id = save_output(report_html, business_name, url=url, grade=grade)
 
         return redirect(url_for("view_report", report_id=report_id))
 
     except Exception as e:
-        print(f"[Audit] Unexpected error: {e}")
+        print(f"[Audit] Unexpected error: {type(e).__name__}: {e}")
+        traceback.print_exc()
         return _error_page(
-            "Something went wrong.",
-            "An unexpected error occurred while generating your report. "
-            "Please try again in a moment.",
-        ), 500
+            "An unexpected error occurred while generating your report. Please try again.",
+            500,
+        )
 
 
 @app.route("/report/<report_id>")
 def view_report(report_id):
-    """Serve a previously generated report by ID."""
-    # Sanitize: only allow hex characters
-    if not all(c in "0123456789abcdef" for c in report_id):
+    """Serve a previously generated report by uuid from Supabase."""
+    # Sanitize: allow standard uuid characters only
+    if not all(c in "0123456789abcdef-" for c in report_id.lower()) or len(report_id) > 64:
         return "Invalid report ID", 400
-    report_file = REPORTS_DIR / f"{report_id}.html"
-    if not report_file.exists():
+
+    try:
+        client = get_supabase()
+        response = (
+            client.table("reports")
+            .select("html")
+            .eq("id", report_id)
+            .limit(1)
+            .execute()
+        )
+        rows = response.data or []
+    except Exception as e:
+        print(f"[view_report] Supabase error: {type(e).__name__}: {e}")
+        return _error_page("We couldn't load that report. Please try again.", 500)
+
+    if not rows:
         return _error_page(
-            "Report expired.",
-            "This report is no longer available. Reports are temporary "
-            "and expire when the server recycles.",
-            details='<p style="color:#64748b;font-size:0.85rem;">Run a new audit to generate a fresh report.</p>',
-        ), 404
-    return report_file.read_text(encoding="utf-8")
+            "That report could not be found. Run a new audit to generate a fresh report.",
+            404,
+        )
+    return rows[0]["html"]
 
 
 @app.route("/capture-email", methods=["POST"])
 @limiter.limit("5 per hour")
 def capture_email():
-    """Save lead to CSV and send emails via Resend."""
+    """Save lead to Supabase leads table and send emails via Resend."""
     data = request.get_json(force=True)
     email = data.get("email", "").strip()
     if not email:
@@ -233,19 +250,19 @@ def capture_email():
     top_leaks = data.get("top_leaks", [])
     now = datetime.now()
 
-    # Always save to CSV first
-    write_header = not LEADS_CSV.exists()
-    with open(LEADS_CSV, "a", newline="") as f:
-        writer = csv.writer(f)
-        if write_header:
-            writer.writerow(
-                ["timestamp", "email", "business_name", "url",
-                 "monthly_loss", "annual_loss"]
-            )
-        writer.writerow([
-            now.isoformat(), email, business_name, url,
-            monthly_loss, annual_loss,
-        ])
+    # Persist lead to Supabase (leads.csv is deprecated)
+    try:
+        client = get_supabase()
+        client.table("leads").insert({
+            "email": email,
+            "business_name": business_name,
+            "url": url,
+            "monthly_loss": monthly_loss,
+            "annual_loss": annual_loss,
+        }).execute()
+    except Exception as e:
+        print(f"[capture_email] Supabase insert failed: {type(e).__name__}: {e}")
+        # Don't block email send on storage failure
 
     # Send emails via Resend (non-blocking — failures don't affect response)
     try:
@@ -261,6 +278,53 @@ def capture_email():
         print(f"[Resend] Notification email failed: {e}")
 
     return jsonify({"ok": True})
+
+
+@app.route("/setup-db")
+def setup_db():
+    """Idempotently create the leads and reports tables in Supabase.
+
+    Uses Supabase's REST RPC to run SQL. Assumes a `exec_sql` RPC or the
+    Postgres-direct connection is available. When running against a plain
+    Supabase project the recommended path is to run this SQL once in the
+    SQL editor; this route attempts it via RPC and reports status.
+    """
+    sql = """
+    create table if not exists leads (
+      id uuid primary key default gen_random_uuid(),
+      created_at timestamptz not null default now(),
+      email text,
+      business_name text,
+      url text,
+      monthly_loss numeric,
+      annual_loss numeric
+    );
+
+    create table if not exists reports (
+      id uuid primary key default gen_random_uuid(),
+      created_at timestamptz not null default now(),
+      business_name text,
+      url text,
+      grade text,
+      html text
+    );
+    """.strip()
+
+    try:
+        client = get_supabase()
+        # Try an `exec_sql` RPC if the project has it defined
+        client.rpc("exec_sql", {"sql": sql}).execute()
+        return jsonify({"ok": True, "message": "Tables created or already exist."})
+    except Exception as e:
+        return jsonify({
+            "ok": False,
+            "error": f"{type(e).__name__}: {e}",
+            "sql": sql,
+            "hint": (
+                "If the RPC is not available, paste the SQL above into the "
+                "Supabase SQL editor and run it once."
+            ),
+        }), 500
 
 
 def _send_owner_email(to_email, business_name, domain, top_leaks,
@@ -362,31 +426,16 @@ View their report at: {url}
 @app.errorhandler(429)
 def ratelimit_handler(e):
     """Friendly page when rate limit is exceeded."""
-    return (
-        '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
-        '<title>Rate Limit — Stop the Leak</title>'
-        '<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
-        'background:#09101d;color:#e2e8f0;display:flex;align-items:center;justify-content:center;'
-        'min-height:100vh;margin:0;text-align:center;padding:2rem;}'
-        '.wrap{max-width:480px}.title{font-size:2rem;font-weight:800;margin-bottom:1rem;}'
-        '.title span{color:#ef4444}p{color:#94a3b8;line-height:1.6;margin-bottom:2rem;}'
-        'a{display:inline-block;background:#dc2626;color:#fff;padding:0.8rem 2rem;'
-        'border-radius:8px;text-decoration:none;font-weight:700;}'
-        'a:hover{background:#ef4444}</style></head>'
-        '<body><div class="wrap">'
-        '<div class="title">Slow <span>Down</span></div>'
-        "<p>You've run too many audits. Please wait an hour and try again.</p>"
-        '<a href="/">Back to Home</a>'
-        '</div></body></html>',
-        429,
-    )
+    return render_template(
+        "error.html",
+        msg="You've run too many audits. Please wait an hour and try again.",
+    ), 429
 
 
 @app.route("/health")
 def health():
     """Return env var status for debugging (values hidden)."""
-    keys = ["RESEND_API_KEY", "ANTHROPIC_API_KEY"]
+    keys = ["RESEND_API_KEY", "ANTHROPIC_API_KEY", "SUPABASE_URL", "SUPABASE_KEY", "SENTRY_DSN"]
     status = {k: bool(os.getenv(k)) for k in keys}
     return jsonify({"env": status})
 

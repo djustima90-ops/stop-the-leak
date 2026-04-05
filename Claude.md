@@ -1,189 +1,140 @@
-# Stop the Leak — Business Audit Tool
-## CLAUDE.md — Agent Instructions
-
----
+# Stop the Leak — CLAUDE.md
 
 ## What This Project Is
+Stop the Leak is an AI-powered website revenue audit tool built by David Justima.
+A business owner pastes their URL. The app scrapes their site, analyzes it with
+Claude, and returns a personalized report showing exactly how much revenue their
+website is losing per month — in dollars — with a letter grade and action plan.
 
-A web-based tool that accepts a local business URL, scrapes the public-facing website,
-analyzes it for lead leaks and conversion gaps using Claude AI, and outputs a structured
-"Leak Report" — a professional diagnostic document identifying exactly where the business
-is losing leads and what to fix.
+Live: stop-the-leak.vercel.app
+Local: port 5001
+GitHub: github.com/djustima90-ops/stop-the-leak
 
-**End user:** Me (the operator), initially. Report is shared with business owner prospects.
-**Phase 1 goal:** Enter URL → get professional Leak Report. Nothing else.
+## Stack
+- Python 3.9, Flask
+- Anthropic SDK (claude-sonnet) — primary AI model
+- BeautifulSoup4 — scraping (being replaced by Firecrawl)
+- Resend — email automation
+- Flask-Limiter — rate limiting
+- Supabase — database (leads table, reports table)
+- Sentry — error tracking
+- Deployed on Vercel (migrating to Railway in Month 2)
 
----
-
-## Tech Stack
-
-- **Language:** Python 3.11+
-- **Web framework:** Flask
-- **Scraping:** requests + BeautifulSoup4
-- **AI:** Anthropic Python SDK — model: claude-sonnet-4-5
-- **Report output:** HTML report rendered in browser
-- **Secrets:** python-dotenv (.env file only — never hardcode keys)
-- **No database** — flat file outputs only
-
----
+## Pipeline
+URL input → scrape_site → extract_content → extract_brand →
+detect_industry → call_claude → generate_report → save to Supabase → /report/[uuid]
 
 ## File Structure
-```
-stop-the-leak/
-├── CLAUDE.md
-├── app.py
-├── .env
-├── requirements.txt
-├── workflows/
-│   └── leak_audit.md
-├── tools/
-│   ├── scrape_site.py
-│   ├── extract_content.py
-│   ├── call_claude.py
-│   ├── generate_report.py
-│   └── save_output.py
-├── outputs/
-└── templates/
-    ├── index.html
-    └── report.html
-```
+app.py                    — Flask app, all routes
+CLAUDE.md                 — this file
+requirements.txt
+.env                      — ANTHROPIC_API_KEY, RESEND_API_KEY, SUPABASE_URL,
+                            SUPABASE_KEY, SENTRY_DSN (never commit)
+leads.csv                 — DEPRECATED, migrated to Supabase
+data/industries.json      — 20+ industry profiles with revenue benchmarks
+workflows/leak_audit.md   — master audit prompt
+tools/
+  scrape_site.py          — fetches raw HTML (Firecrawl replacing this)
+  extract_content.py      — BeautifulSoup parser
+  extract_brand.py        — favicon/color/logo extraction (3s timeout required)
+  detect_industry.py      — keyword-based industry classifier
+  call_claude.py          — Claude API call (MUST use tool_use for JSON output)
+  generate_report.py      — Jinja2 report renderer
+  save_output.py          — saves to Supabase reports table
+templates/
+  index.html              — landing page + loading screen
+  report.html             — full audit report
+  website/index.html      — marketing site
+static/
+  cha-ching.mp3
 
----
+## Critical Rules — Always Follow These
 
-## Build Sequence — Follow This Exactly
+### 1. Claude Output Must Be Structured JSON
+NEVER ask Claude to return prose and parse it manually.
+ALWAYS use tool_use with a strict schema:
+{
+  executive_summary: string,
+  grade: "A"|"B"|"C"|"D"|"F",
+  findings: [{
+    title: string,
+    category: "Lead Leak"|"Conversion Leak"|"Follow-Up Leak",
+    severity: "HIGH"|"MEDIUM"|"LOW",
+    monthly_loss: number,
+    impact: string,
+    fix: string
+  }]
+}
 
-Build in this order. Do not skip ahead. Verify each step works before moving on.
-```
-Step 1: Scaffold all folders and empty files
-Step 2: Create requirements.txt and .env template
-Step 3: Build tools/scrape_site.py — test with 1 real URL
-Step 4: Build tools/extract_content.py — test with scraped HTML
-Step 5: Create workflows/leak_audit.md with full audit prompt
-Step 6: Build tools/call_claude.py — test with sample content
-Step 7: Build tools/generate_report.py
-Step 8: Build tools/save_output.py
-Step 9: Build templates/index.html
-Step 10: Build templates/report.html
-Step 11: Build app.py tying everything together
-Step 12: End-to-end test with 3 real business URLs
-```
+### 2. Every Claude API Call Must Have Error Handling
+NEVER make a bare call_claude() without a try/except wrapper.
+Pattern to always use:
+try:
+    result = call_claude(content, industry)
+except anthropic.APITimeoutError:
+    return render_template("error.html", msg="Audit timed out. Try again.")
+except anthropic.RateLimitError:
+    time.sleep(60)
+    result = call_claude(content, industry)
+except Exception as e:
+    log_error(url, str(e))
+    return render_template("error.html", msg="Something went wrong.")
 
----
+### 3. URL Validation — Always Validate Before Scraping
+Block: localhost, 127.0.0.1, 192.168.x.x, file://, javascript:, data:
+Require: http:// or https:// scheme, valid TLD, non-empty hostname
+Add 10-second timeout on all scraper requests
 
-## What Each Tool Does
+### 4. Brand Extraction Is Non-Blocking
+extract_brand() MUST run inside a ThreadPoolExecutor with a 3-second timeout.
+If it fails or times out, continue with brand = {} gracefully. Never let it
+block the audit pipeline.
 
-### tools/scrape_site.py
-**Input:** URL string
-**Does:** Fetches raw HTML using requests with a realistic user-agent header.
-Handles redirects, timeouts (10s), and basic HTTP errors.
-**Returns:** Raw HTML string or raises a clear exception.
-**Does NOT:** Parse or analyze anything.
+### 5. All Data Goes to Supabase
+leads.csv is DEPRECATED. Never write to it.
+All leads → Supabase leads table
+All reports → Supabase reports table (uuid, html, business_name, url, grade, created_at)
+Reports served from Supabase on /report/[uuid] — never from /tmp
 
-### tools/extract_content.py
-**Input:** Raw HTML string, source URL
-**Does:** Uses BeautifulSoup to extract page title, meta description,
-headings (H1/H2/H3), body text, links, forms, CTA buttons,
-contact info (phone, email, address), image count, nav structure.
-**Returns:** Python dict of structured content.
-**Does NOT:** Make any judgments.
+### 6. Parallel Pipeline
+extract_brand() and detect_industry() have no dependency on each other.
+Run them simultaneously using concurrent.futures.ThreadPoolExecutor.
+Never run them sequentially.
 
-### tools/call_claude.py
-**Input:** Structured content dict
-**Does:** Reads audit prompt from workflows/leak_audit.md,
-injects structured site content, calls Claude API with claude-sonnet-4-5.
-**Returns:** Claude's analysis as a string.
-**Token limit:** max_tokens=4000
+## Design Standards — Non-Negotiable
+- NO Inter font, NO Roboto, NO Arial
+- NO generic purple gradients
+- NO card layouts that look like Tailwind tutorials
+- Dark, bold, editorial aesthetic
+- Fonts: Clash Display or Syne for headings, Space Grotesk or DM Sans for body
+- Primary accent: #dc2626 red (unless brand color extracted)
+- Every page must feel premium — not AI slop
+- Mobile-first — reports must work on phone
 
-### tools/generate_report.py
-**Input:** Claude analysis string, business name, URL, timestamp
-**Does:** Parses Claude's output and populates report.html template.
-**Returns:** Rendered HTML string.
+## Copy and Tone Standards
+- Lead with dollar amounts: "You're losing $4,200/month" not "Your site has issues"
+- First-person David voice: trusted local advisor, not a SaaS startup
+- Berkshires specific: seasonal visitors, walk-in traffic, repeat clients
+- CTA is always "Book a Free Call" — never "Contact Us" or "Learn More"
+- Executive summaries must name the business, reference their vertical,
+  include one location-specific detail when available
 
-### tools/save_output.py
-**Input:** Rendered HTML string, business name
-**Does:** Saves HTML to outputs/<slug>_<YYYYMMDD_HHMMSS>.html
-**Returns:** File path of saved report.
+## Business Context
+Target: Local SMBs — restaurants, contractors, salons, medical, law/CPA, retail
+Market: Berkshires MA and surrounding region
+Pricing: Free audit → $500 fix top 3 leaks → $1,500 full package
+Warm leads: Alignable connections — Lucille Murray (145 connections, Berkshires
+  gateway) and Lauren Fritscher (Berkshire Muse, already invited David)
+Calendly: https://calendly.com/djustima90/30min
+Domain: stoptheleak.com (buy this)
+Goal: 1 paying client before April 27, 2026
 
----
-
-## Audit Logic — Claude Must Evaluate These 3 Categories
-
-### CATEGORY 1: LEAD LEAKS
-- Is there a visible contact form?
-- Is there a phone number? Is it a clickable tel: link?
-- Is there an email address visible?
-- Is there a live chat widget?
-- Is there a Google Business / Maps integration?
-
-### CATEGORY 2: CONVERSION LEAKS
-- Is there one clear CTA above the fold?
-- Does the headline communicate what the business does?
-- Is there a value proposition visible without scrolling?
-- Is there social proof — reviews, testimonials, logos?
-- Are there trust signals — certifications, awards, years in business?
-- Is the page mobile-responsive?
-
-### CATEGORY 3: FOLLOW-UP LEAKS
-- Is there a lead magnet or email capture?
-- Is there a newsletter signup?
-- Are there blog posts updated in the last 6 months?
-- Are social media links present?
-
-### Claude Must Return This Exact Format:
-```
-EXECUTIVE_SUMMARY:
-[2-3 sentence summary]
-
-LEAD_LEAKS:
-FINDING: [specific finding]
-SEVERITY: [High/Medium/Low]
-IMPACT: [one sentence]
-FIX: [one sentence]
----
-
-CONVERSION_LEAKS:
-FINDING: [specific finding]
-SEVERITY: [High/Medium/Low]
-IMPACT: [one sentence]
-FIX: [one sentence]
----
-
-FOLLOW_UP_LEAKS:
-FINDING: [specific finding]
-SEVERITY: [High/Medium/Low]
-IMPACT: [one sentence]
-FIX: [one sentence]
----
-
-PRIORITY_FIXES:
-1. [Most critical fix]
-2. [Second most critical]
-3. [Third most critical]
-
-LEAK_COUNT:
-Lead Leaks: [number]
-Conversion Leaks: [number]
-Follow-Up Leaks: [number]
-Total: [number]
-```
-
----
-
-## Code Rules
-
-- Keep app.py under 80 lines — all logic lives in tools/
-- Each tool is a standalone Python file with one main function
-- Every function has a docstring
-- No global state
-- Use pathlib for all file paths
-- requirements.txt must pin exact versions
-
----
-
-## What NOT to Build in Phase 1
-
-- No PDF generation
-- No email sending
-- No user accounts or login
-- No database
-- No multi-page scraping (homepage only)
+## What Good Looks Like
+Every new feature must pass this checklist:
+☐ Claude output is structured JSON via tool_use
+☐ Every AI call has try/except with graceful error page
+☐ No blocking operations without timeout caps
+☐ Data persists to Supabase, not CSV or /tmp
+☐ UI matches design standards (no AI slop)
+☐ Copy leads with dollar amounts
+☐ Works on mobile
